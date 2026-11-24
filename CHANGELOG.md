@@ -8,6 +8,31 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 Nothing yet.
 
+## [0.1.5] - 2026-11-24
+
+### Fixed
+
+- **The App-level webhook URL was unreachable.** The route only matched a
+  32-character per-deployment token, so every delivery to the URL handed to
+  GitHub in 0.1.4 — which carries the 64-character site-wide App secret — was
+  answered `404 rest_no_route`. The route now accepts `[a-f0-9]{32}` and
+  `[a-f0-9]{64}`.
+- **App deliveries now fan out.** A correctly signed App delivery is offered to
+  every active deployment with automatic deployment on; repository and branch
+  are checked per deployment, and every non-matching deployment answers 202
+  without creating a job.
+
+### Changed
+
+- `AppSetup::app_webhook_secret()` (read-only, returns `''` when none exists)
+  sits alongside `AppSetup::hook_secret()` (creates on demand). The webhook
+  controller only reads: receiving a delivery never mints or rotates a secret.
+- An App delivery is validated *before* the delivery ID is recorded, so a
+  deployment whose repository does not match cannot claim the ID from the one
+  that does.
+- `WebhookController` responses for App deliveries use 202 for every non-queued
+  outcome; `queued` returns `{ "deployments": n }`.
+
 ## [0.1.4] - 2026-11-24
 
 ### Fixed

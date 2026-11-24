@@ -103,23 +103,54 @@ final class AppSetup {
 	}
 
 	/**
-	 * Secret used to sign the App's webhook deliveries.
+	 * The site-wide App webhook secret, creating it on first use.
 	 *
 	 * Generated once and kept in the settings option. The manifest's webhook URL
-	 * carries it, so it has to exist before the App is created.
+	 * carries it, so it has to exist before the App is created. This writes to
+	 * the database, so only call it from actions rather than page rendering.
 	 *
 	 * @return string 32-byte hex string.
 	 */
 	public static function hook_secret() {
+		return self::stored_hook_secret();
+	}
+
+	/**
+	 * Read the site-wide App webhook secret without creating one.
+	 *
+	 * Safe to call during page rendering: a site that has never run the App
+	 * manifest flow gets an empty string.
+	 *
+	 * @return string 64-character hex string, or empty.
+	 */
+	public static function app_webhook_secret() {
 		$settings = get_option( Settings::OPTION, array() );
 		$settings = is_array( $settings ) ? $settings : array();
-		$existing = isset( $settings['app_webhook_secret'] ) ? (string) $settings['app_webhook_secret'] : '';
+		$secret   = isset( $settings['app_webhook_secret'] ) ? (string) $settings['app_webhook_secret'] : '';
 
-		if ( 1 === preg_match( '/^[a-f0-9]{64}$/', $existing ) ) {
+		return 1 === preg_match( '/^[a-f0-9]{64}$/', $secret ) ? $secret : '';
+	}
+
+	/**
+	 * Create the site-wide App webhook secret if it does not exist yet.
+	 *
+	 * Kept apart from `hook_secret()` because generating a secret is a write:
+	 * page rendering calls the read-only accessor, and only the actions that
+	 * actually send a hook URL to GitHub create one.
+	 *
+	 * @return string
+	 */
+	private static function stored_hook_secret() {
+		$existing = self::app_webhook_secret();
+
+		if ( '' !== $existing ) {
 			return $existing;
 		}
 
-		$secret                        = bin2hex( random_bytes( 32 ) );
+		$settings = get_option( Settings::OPTION, array() );
+		$settings = is_array( $settings ) ? $settings : array();
+
+		$secret                         = bin2hex( random_bytes( 32 ) );
 		$settings['app_webhook_secret'] = $secret;
 		update_option( Settings::OPTION, $settings, false );
 
@@ -178,9 +209,11 @@ final class AppSetup {
 	public function manifest() {
 		// GitHub's manifest schema uses `default_permissions` / `default_events`,
 		// and `hook_attributes.url` is required even when the hook is inactive.
-		// The App is created with the hook off: the URL points at the site webhook
-		// and deployments pick repositories by their own token, so it only becomes
-		// useful once the owner activates it and selects repositories.
+		// The hook URL carries the site-wide App secret, so one App serves every
+		// deployment on the site: GitHub signs each delivery with the secret it
+		// stored during this exchange, and the webhook routes it by repository
+		// and branch. The owner still chooses repositories and can switch the
+		// hook on once a deployment needs it.
 		return array(
 			'name'               => $this->app_name(),
 			'url'                => home_url( '/' ),
