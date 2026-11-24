@@ -7,6 +7,7 @@
 
 namespace GitHubSync\Admin;
 
+use GitHubSync\GitHub\AppSetup;
 use GitHubSync\GitHub\GitHubApiClient;
 use GitHubSync\GitHub\GitHubAuth;
 use GitHubSync\Security\Capability;
@@ -26,6 +27,9 @@ final class ConnectionPage {
 	 */
 	public static function render() {
 		Capability::assert();
+
+		// GitHub redirects the manifest and install callbacks to this page.
+		$callback = Actions::page_callback();
 
 		$auth = new GitHubAuth();
 
@@ -72,8 +76,57 @@ final class ConnectionPage {
 			'has_next'       => $has_next,
 			'error'          => $error,
 			'browse_url'     => wp_nonce_url( admin_url( 'admin.php?page=githubsync-connection&browse=1' ), 'githubsync_browse' ),
+			'manifest'       => self::manifest_data( $auth, $callback ),
 		);
 
 		include GITHUBSYNC_DIR . 'templates/connection.php';
+	}
+
+	/**
+	 * One-click App setup state for the template.
+	 *
+	 * The installation list needs a live GitHub call with an App JWT, so it is
+	 * only fetched when an App is stored and not yet installed.
+	 *
+	 * @param GitHubAuth  $auth     Auth instance.
+	 * @param array|null  $callback Outcome of a GitHub callback on this page.
+	 * @return array
+	 */
+	private static function manifest_data( GitHubAuth $auth, $callback = null ) {
+		$setup   = new AppSetup();
+		$meta    = $auth->app_meta();
+		$pending = isset( $_GET['gs_state'] ) ? sanitize_text_field( wp_unslash( $_GET['gs_state'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$form    = '' !== $pending ? $setup->form( $pending ) : null;
+
+		$installations = array();
+		$install_error = '';
+
+		if ( $auth->has_app() && ! CredentialVault::is_configured() ) {
+			$install_error = __( 'Secure encryption is not configured, so the App key cannot be read to list installations.', 'githubsync' );
+		} elseif ( $auth->has_app() ) {
+			$list = $auth->app_installations();
+
+			if ( is_wp_error( $list ) ) {
+				$install_error = $list->get_error_message();
+			} else {
+				$installations = $list;
+			}
+		}
+
+		$app_id = isset( $meta['app_id'] ) ? (string) $meta['app_id'] : '';
+
+		return array(
+			'supported'     => $setup->is_supported(),
+			'app_name'      => $setup->app_name(),
+			'form'          => $form,
+			'callback'      => is_array( $callback ) ? $callback : null,
+			'has_app'       => $auth->has_app(),
+			'app_meta'      => $meta,
+			'install_url'   => AppSetup::install_url( isset( $meta['slug'] ) ? $meta['slug'] : '' ),
+			'installations' => $installations,
+			'install_error' => $install_error,
+			'key_ready'     => '' !== $app_id && $setup->key_download_available( $app_id ),
+			'current'       => $auth->is_connected() && 'app' === $auth->connection()['mode'] ? (string) $auth->connection()['installation_id'] : '',
+		);
 	}
 }

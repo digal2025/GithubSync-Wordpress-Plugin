@@ -113,8 +113,36 @@ and asks you to reconnect rather than sending anything unauthenticated.
 
 ## GitHub App setup
 
-GitHubSync supports two connection methods. A GitHub App is recommended because
+GitHubSync supports three connection methods. A GitHub App is recommended because
 it issues short-lived tokens and scopes access to the repositories you choose.
+The quickest way to create one is the signed manifest flow, which GitHub only
+accepts on an **HTTPS** home URL (or `http://localhost`).
+
+### One-click setup (recommended)
+
+1. Go to **GitHubSync → GitHub Connection** and click **Create GitHub App**.
+2. On GitHub, review the prefilled manifest and click **Create GitHub App**.
+3. GitHub redirects back to the connection page. The App ID, private key and
+   webhook secret are stored automatically for you.
+4. Download the private key once if you want a copy (GitHub only shows it once),
+   then click **Install** and pick the repositories.
+
+The webhook is created inactive: select repositories on GitHub and activate it
+before relying on automatic deployments. If installing does not finish, the
+pick-your-installation list on the same page binds it later.
+
+Sites served over plain HTTP cannot use this flow. WordPress reports that in the
+dashboard, and you can either set up the App manually (below) or leave the
+redirect on `https://` behind a TLS-terminating proxy and tell GitHubSync the site
+is HTTPS-ready:
+
+```php
+add_filter( 'githubsync_app_setup_supported', '__return_true' );
+```
+
+Only add that filter when GitHub really redirects to an HTTPS URL for your site.
+
+### Manual setup
 
 1. Go to **GitHub → Settings → Developer settings → GitHub Apps → New GitHub App**.
 2. Set **Homepage URL** to your site.
@@ -132,11 +160,12 @@ it issues short-lived tokens and scopes access to the repositories you choose.
 ## Connecting GitHub
 
 1. Go to **GitHubSync → GitHub Connection**.
-2. Choose the **GitHub App** tab and paste the App ID, the installation ID and
-   the contents of the private key, then save. The private key is validated as a
-   parseable PEM and encrypted before it is stored. The App and installation IDs
-   are not verified against GitHub at save time — the first deployment is what
-   proves them, so run **Deploy Now** once after connecting.
+2. Use **Create GitHub App** (above), or choose the **GitHub App** section and
+   paste the App ID, the installation ID and the contents of the private key,
+   then save. The private key is validated as a parseable PEM and encrypted
+   before it is stored. The App and installation IDs are not verified against
+   GitHub at save time — the first deployment is what proves them, so run
+   **Deploy Now** once after connecting.
 3. Alternatively use the **Personal access token** tab. A fine-grained token
    needs **Contents: Read-only** on the target repositories. Saving a token
    verifies it immediately against `GET /user` and stores the account name.

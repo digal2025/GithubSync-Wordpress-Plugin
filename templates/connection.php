@@ -89,6 +89,113 @@ defined( 'ABSPATH' ) || exit;
 
 	<h2 class="gs-section-title"><?php esc_html_e( 'Connect a GitHub App (recommended)', 'githubsync' ); ?></h2>
 	<div class="gs-card">
+		<?php if ( ! empty( $data['manifest']['callback'] ) ) : ?>
+			<?php $gs_cb = $data['manifest']['callback']; ?>
+			<p class="<?php echo 'error' === $gs_cb['type'] ? 'gs-bad' : ( 'warning' === $gs_cb['type'] ? 'gs-warn' : 'gs-ok' ); ?>">
+				<?php echo esc_html( $gs_cb['message'] ); ?>
+			</p>
+			<?php if ( '' !== $gs_cb['install_url'] ) : ?>
+				<p class="gs-actionbar">
+					<a class="button button-primary" href="<?php echo esc_url( $gs_cb['install_url'] ); ?>"><?php esc_html_e( 'Install the App on GitHub', 'githubsync' ); ?></a>
+				</p>
+			<?php endif; ?>
+		<?php endif; ?>
+
+		<?php if ( $data['manifest']['supported'] ) : ?>
+			<?php if ( ! empty( $data['manifest']['form'] ) ) : ?>
+				<p class="gs-muted"><?php esc_html_e( 'Sending the App manifest to GitHub…', 'githubsync' ); ?></p>
+				<form id="gs-manifest" method="post" action="<?php echo esc_url( $data['manifest']['form']['action'] ); ?>">
+					<input type="hidden" name="manifest" value="<?php echo esc_attr( $data['manifest']['form']['manifest'] ); ?>">
+					<input type="hidden" name="state" value="<?php echo esc_attr( $data['manifest']['form']['state'] ); ?>">
+					<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Continue to GitHub', 'githubsync' ); ?></button></p>
+				</form>
+				<script>document.getElementById('gs-manifest').submit();</script>
+			<?php else : ?>
+				<p>
+					<?php
+					printf(
+						/* translators: %s: GitHub App name that will be created. */
+						esc_html__( 'Create "%s" on GitHub in one step. You approve it on github.com, and this site then stores the App ID, private key and webhook secret for you. The App requests only Metadata (read) and Contents (read).', 'githubsync' ),
+						esc_html( $data['manifest']['app_name'] )
+					);
+					?>
+				</p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
+					<?php wp_nonce_field( 'githubsync_begin_app_manifest' ); ?>
+					<input type="hidden" name="action" value="githubsync_begin_app_manifest">
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'Create GitHub App', 'githubsync' ); ?></button>
+				</form>
+			<?php endif; ?>
+		<?php else : ?>
+			<p class="gs-bad">
+				<?php esc_html_e( 'One-click App creation needs this site to be served over HTTPS (or http://localhost), because GitHub only redirects back to those. Use the manual fields below instead.', 'githubsync' ); ?>
+			</p>
+		<?php endif; ?>
+
+		<?php if ( $data['manifest']['has_app'] ) : ?>
+			<hr>
+			<p class="gs-muted">
+				<?php esc_html_e( 'App created. Install it on the account and repositories you want to deploy, then pick the installation here.', 'githubsync' ); ?>
+			</p>
+
+			<p class="gs-actionbar">
+				<?php if ( '' !== $data['manifest']['install_url'] ) : ?>
+					<a class="button" href="<?php echo esc_url( $data['manifest']['install_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Install App on GitHub', 'githubsync' ); ?></a>
+				<?php endif; ?>
+
+				<?php if ( '' !== $data['manifest']['app_meta']['html_url'] ) : ?>
+					<a class="button" href="<?php echo esc_url( $data['manifest']['app_meta']['html_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open App settings on GitHub', 'githubsync' ); ?></a>
+				<?php endif; ?>
+
+				<?php if ( $data['manifest']['key_ready'] ) : ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
+						<?php wp_nonce_field( 'githubsync_download_app_key' ); ?>
+						<input type="hidden" name="action" value="githubsync_download_app_key">
+						<button type="submit" class="button"><?php esc_html_e( 'Download private key', 'githubsync' ); ?></button>
+					</form>
+				<?php endif; ?>
+			</p>
+			<?php if ( $data['manifest']['key_ready'] ) : ?>
+				<p class="description"><?php esc_html_e( 'Keep a copy of the private key somewhere safe: GitHub only shows it once, and the download is re-encrypted from this site.', 'githubsync' ); ?></p>
+			<?php endif; ?>
+
+			<?php if ( '' !== $data['manifest']['install_error'] ) : ?>
+				<p class="gs-bad"><?php echo esc_html( $data['manifest']['install_error'] ); ?></p>
+			<?php elseif ( empty( $data['manifest']['installations'] ) ) : ?>
+				<p class="gs-muted"><?php esc_html_e( 'No installations found yet. Install the App on GitHub, then reload this page.', 'githubsync' ); ?></p>
+			<?php else : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form">
+					<?php wp_nonce_field( 'githubsync_install_app' ); ?>
+					<input type="hidden" name="action" value="githubsync_install_app">
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><label for="gs-installation-pick"><?php esc_html_e( 'Installation', 'githubsync' ); ?></label></th>
+							<td>
+								<select id="gs-installation-pick" name="installation_id" class="regular-text">
+									<?php foreach ( $data['manifest']['installations'] as $gs_install ) : ?>
+										<option value="<?php echo esc_attr( $gs_install['installation_id'] ); ?>"<?php selected( $data['manifest']['current'], $gs_install['installation_id'] ); ?>>
+											<?php
+											printf(
+												/* translators: 1: GitHub account login, 2: installation ID. */
+												esc_html__( '%1$s (installation %2$s)', 'githubsync' ),
+												esc_html( '' !== $gs_install['account'] ? $gs_install['account'] : __( 'unknown account', 'githubsync' ) ),
+												esc_html( $gs_install['installation_id'] )
+											);
+											?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+						</tr>
+					</table>
+					<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Use this installation', 'githubsync' ); ?></button></p>
+				</form>
+			<?php endif; ?>
+		<?php endif; ?>
+	</div>
+
+	<details class="gs-card"<?php echo $data['manifest']['supported'] ? '' : ' open'; ?>>
+		<summary><strong><?php esc_html_e( 'Connect an existing GitHub App manually', 'githubsync' ); ?></strong></summary>
 		<p class="gs-muted">
 			<?php esc_html_e( 'Create a GitHub App, install it on the repositories you want to deploy, and paste its App ID, installation ID and private key below. Request only Metadata (read) and Contents (read).', 'githubsync' ); ?>
 		</p>
@@ -120,7 +227,7 @@ defined( 'ABSPATH' ) || exit;
 
 			<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save GitHub App connection', 'githubsync' ); ?></button></p>
 		</form>
-	</div>
+	</details>
 
 	<h2 class="gs-section-title"><?php esc_html_e( 'Or use a personal access token', 'githubsync' ); ?></h2>
 	<div class="gs-card">

@@ -6,6 +6,10 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.3] - 2026-11-24
+
 ### Added
 
 - Test suite (`tests/`) reconstructed from the specification: 250 assertions
@@ -16,6 +20,28 @@ All notable changes to GitHubSync are recorded here. The format follows
   [`docs/SECURITY.md`](docs/SECURITY.md), [`docs/WEBHOOK-SETUP.md`](docs/WEBHOOK-SETUP.md),
   [`docs/DEPLOYMENT-RECOVERY.md`](docs/DEPLOYMENT-RECOVERY.md), and
   [`docs/TESTING.md`](docs/TESTING.md).
+
+### Added
+
+- **One-click GitHub App setup (signed manifest flow).** *Create GitHub App* on
+  the connection page posts a signed manifest to GitHub; after approval the App
+  ID, private key and webhook secret are fetched through the manifest conversion
+  endpoint and stored encrypted. The page then offers **Install**, and a
+  pick-your-installation list binds an App that was created but not yet
+  installed. A one-time private-key download is offered because GitHub only
+  shows the key once.
+- `githubsync_app_setup_supported` filter, for sites behind a TLS-terminating
+  proxy whose `home_url()` reports `http://` while GitHub sees `https://`.
+
+### Changed
+
+- A GitHub App can be stored before it is installed: the App ID is required but
+  a blank installation ID is accepted when a private key is supplied.
+- Changing the connection rolls back to the previous credentials if the new
+  installation cannot be verified against GitHub, so a half-finished flow never
+  replaces a working connection or personal access token.
+- `is_connected()` requires an installation for App mode; an App that exists but
+  is not installed is reported separately.
 
 ## [0.1.2] - 2026-11-24
 

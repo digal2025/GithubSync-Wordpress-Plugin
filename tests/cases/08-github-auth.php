@@ -151,11 +151,17 @@ $pem  = $make_pem();
 if ( false === $pem ) {
 	Assert::skip( 'openssl cannot generate an RSA key here' );
 } else {
-	foreach ( array( array( '', '1' ), array( '123', '' ), array( 'app', '123' ), array( '123', 'inst' ) ) as $ids ) {
+	// A blank installation ID is allowed only when a key is supplied, because
+	// the manifest flow stores the App before it is installed.
+	foreach ( array( array( '', '1' ), array( 'app', '123' ), array( '', '' ) ) as $ids ) {
 		$result = $auth->connect_app( $ids[0], $ids[1], $pem );
 		Assert::true( is_wp_error( $result ), 'rejects app id ' . wp_json_encode( $ids ) );
 		Assert::same( ErrorCodes::CONFIG_INVALID, $result->get_error_code(), 'id rejection is CONFIG_INVALID' );
 	}
+
+	$no_key = $auth->connect_app( '123', '', '' );
+	Assert::true( is_wp_error( $no_key ), 'blank installation ID without a key is rejected' );
+	Assert::same( ErrorCodes::CONFIG_INVALID, $no_key->get_error_code(), 'missing ids and key is CONFIG_INVALID' );
 
 	$bad = $auth->connect_app( '123', '456', 'not a pem' );
 	Assert::true( is_wp_error( $bad ), 'rejects a non-PEM private key' );
@@ -174,6 +180,29 @@ if ( false === $pem ) {
 	Assert::true( $is_vault_payload( $stored_key ), 'private key stored as a vault payload' );
 	Assert::false( false !== strpos( $stored_key, 'PRIVATE KEY' ), 'private key material is not in cleartext' );
 	Assert::same( '', (string) get_option( GitHubAuth::OPTION_PAT, '' ), 'PAT was cleared' );
+
+	CaseRunner::case( 'an App can be stored before it is installed' );
+	$auth->disconnect();
+	$bare = $auth->connect_app( '4242', '', $pem, array( 'account' => 'acme-org' ) );
+	Assert::true( $bare, 'a blank installation ID is accepted with a key' );
+	Assert::true( $auth->has_app(), 'has_app() is true for an uninstalled App' );
+	Assert::same( '', $auth->connection()['installation_id'], 'there is no installation yet' );
+	Assert::false( $auth->is_connected(), 'an uninstalled App is not a connection' );
+	Assert::true( is_wp_error( $auth->get_token() ), 'get_token() fails before installation' );
+
+	CaseRunner::case( 'completing the installation attaches it to the stored App' );
+	$auth->remember_app_meta( array( 'app_id' => '4242', 'slug' => 'githubsync-dev' ) );
+	$done = $auth->complete_installation( '4242', '777', array( 'account' => 'acme-org' ) );
+	Assert::true( $done, 'the installation is attached' );
+	Assert::true( $auth->is_connected(), 'the App is connected once installed' );
+	Assert::same( '777', $auth->connection()['installation_id'], 'the installation ID is stored' );
+	Assert::same( 'acme-org', $auth->connection()['account'], 'the account is kept' );
+	Assert::same( '4242', $auth->app_meta()['app_id'], 'app_meta() keeps the App ID' );
+
+	$mismatch = $auth->complete_installation( '9999', '888' );
+	Assert::true( is_wp_error( $mismatch ), 'another App ID cannot take over the stored App' );
+
+	$auth->disconnect();
 }
 
 // -------------------------------------------------------- error mapping ---

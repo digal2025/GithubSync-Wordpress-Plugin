@@ -14,6 +14,7 @@ use GitHubSync\Deployment\BackupManager;
 use GitHubSync\Deployment\DeploymentManager;
 use GitHubSync\Domain\DestinationPolicy;
 use GitHubSync\Filesystem\FilesystemAdapter;
+use GitHubSync\GitHub\AppSetup;
 use GitHubSync\GitHub\GitHubApiClient;
 use GitHubSync\GitHub\GitHubAuth;
 use GitHubSync\Queue\Queue;
@@ -48,6 +49,10 @@ final class Actions {
 			'githubsync_regenerate_secret',
 			'githubsync_save_connection_app',
 			'githubsync_save_connection_pat',
+			'githubsync_begin_app_manifest',
+			'githubsync_finish_app_manifest',
+			'githubsync_install_app',
+			'githubsync_download_app_key',
 			'githubsync_disconnect',
 			'githubsync_test_connection',
 			'githubsync_save_settings',
@@ -101,6 +106,18 @@ final class Actions {
 				break;
 			case 'githubsync_save_connection_pat':
 				self::save_connection_pat();
+				break;
+			case 'githubsync_begin_app_manifest':
+				self::begin_app_manifest();
+				break;
+			case 'githubsync_finish_app_manifest':
+				self::finish_app_manifest();
+				break;
+			case 'githubsync_install_app':
+				self::install_app();
+				break;
+			case 'githubsync_download_app_key':
+				self::download_app_key();
 				break;
 			case 'githubsync_disconnect':
 				self::disconnect();
@@ -465,7 +482,7 @@ final class Actions {
 	 *
 	 * @return array
 	 */
-	private static function snapshot_connection() {
+	public static function snapshot_connection() {
 		$keys = array( GitHubAuth::OPTION_CONNECTION, GitHubAuth::OPTION_APP_KEY, GitHubAuth::OPTION_PAT );
 		$snap = array();
 
@@ -486,7 +503,7 @@ final class Actions {
 	 * @param array $snapshot Snapshot from snapshot_connection().
 	 * @return void
 	 */
-	private static function restore_connection( array $snapshot ) {
+	public static function restore_connection( array $snapshot ) {
 		foreach ( $snapshot as $key => $entry ) {
 			if ( ! empty( $entry['exists'] ) ) {
 				update_option( $key, $entry['value'], false );
@@ -579,6 +596,105 @@ final class Actions {
 		}
 
 		self::back( 'githubsync-connection', 'connected' );
+	}
+
+	/**
+	 * Start the one-click App creation: store the pending state, then send the
+	 * browser to GitHub with that state, so the page can render the manifest
+	 * form it must POST.
+	 *
+	 * @return void
+	 */
+	private static function begin_app_manifest() {
+		self::verify( 'githubsync_begin_app_manifest' );
+
+		// GitHub only accepts the manifest as a form POST, so this stores the
+		// single-use state and the page renders the self-submitting form.
+		$organization = isset( $_POST['organization'] ) ? sanitize_text_field( wp_unslash( $_POST['organization'] ) ) : '';
+		$setup        = new AppSetup();
+		$started      = $setup->begin( $organization );
+
+		if ( is_wp_error( $started ) ) {
+			self::back_message( 'githubsync-connection', $started->get_error_message() );
+		}
+
+		self::back( 'githubsync-connection', 'app_manifest_ready', 'success', array( 'gs_state' => $started['state'] ) );
+	}
+
+	/**
+	 * Run the flow's callback when GitHub redirected to `admin-post.php`.
+	 *
+	 * @return void
+	 */
+	private static function finish_app_manifest() {
+		$result = ( new AppSetup() )->finish( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GitHub callbacks carry no nonce.
+
+		if ( null === $result ) {
+			self::back_message( 'githubsync-connection', __( 'Nothing to finish here. Start again from the connection page.', 'githubsync' ) );
+		}
+
+		if ( 'error' === $result['code'] ) {
+			self::back_message( 'githubsync-connection', $result['message'] );
+		}
+
+		self::back( 'githubsync-connection', $result['code'], $result['type'] );
+	}
+
+	/**
+	 * Finish the flow when GitHub redirected to the connection page itself.
+	 *
+	 * Returns the outcome for the page to render in place, without redirecting.
+	 *
+	 * @return array|null { code, type, message, install_url }
+	 */
+	public static function page_callback() {
+		return ( new AppSetup() )->finish( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GitHub callbacks carry no nonce.
+	}
+
+	/**
+	 * Bind an existing installation to the stored App, chosen from the
+	 * App's own installation list.
+	 *
+	 * @return void
+	 */
+	private static function install_app() {
+		self::verify( 'githubsync_install_app' );
+
+		$installation_id = isset( $_POST['installation_id'] ) ? preg_replace( '/[^0-9]/', '', (string) wp_unslash( $_POST['installation_id'] ) ) : '';
+
+		$setup  = new AppSetup();
+		$result = $setup->install( '', array( 'installation_id' => $installation_id ) );
+
+		if ( is_wp_error( $result ) ) {
+			self::back_message( 'githubsync-connection', $result->get_error_message() );
+		}
+
+		self::back( 'githubsync-connection', 'app_installed' );
+	}
+
+	/**
+	 * Download the stored App private key once, after a one-click setup.
+	 *
+	 * GitHub only returns the key in the manifest conversion, so this is the
+	 * one chance to keep a copy outside the site.
+	 *
+	 * @return void
+	 */
+	private static function download_app_key() {
+		self::verify( 'githubsync_download_app_key' );
+
+		$key = ( new AppSetup() )->private_key();
+
+		if ( is_wp_error( $key ) ) {
+			self::back_message( 'githubsync-connection', $key->get_error_message() );
+		}
+
+		nocache_headers();
+		header( 'Content-Type: application/octet-stream' );
+		header( 'Content-Disposition: attachment; filename="githubsync-app-private-key.pem"' );
+		header( 'X-Content-Type-Options: nosniff' );
+		echo $key; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw PEM download.
+		exit;
 	}
 
 	/**
