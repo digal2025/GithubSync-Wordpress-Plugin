@@ -8,6 +8,43 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 Nothing yet.
 
+## [0.1.6] - 2026-11-24
+
+### Added
+
+- **The Add Deployment form explains itself.** A "How to fill this in" card
+  lists what each field needs, and every field has a short description and
+  placeholder. The card points at the repository URL trick (`?gs_repo=owner/name`)
+  and the Browse repositories list, which are what make prefilling possible.
+- **"Adopt an existing destination directory" is explained.** The hint now says
+  what the checkbox does and does not do: it only allows GitHubSync to overwrite
+  a folder that is already on disk. It makes no backup, keeps protected files
+  excluded and does not touch the database. Tick it only when overwriting that
+  folder is acceptable.
+- **New deployments are prefilled from GitHub.** When the form is opened for a
+  repository GitHubSync can read, three fields are filled in before the user
+  types anything: **Branch** (the repository's default branch), **Source path**
+  (empty, meaning repository root) and **Destination folder** (the repository
+  name, lower-cased). A notice says which repository the values came from and
+  whether it is public or private, and each filled field carries a one-line
+  hint naming its source.
+- **A failed repository lookup says so.** If metadata cannot be read, a warning
+  explains that nothing was prefilled and repeats the GitHub error, instead of
+  leaving the form silently empty.
+
+### Changed
+
+- Prefilling never overwrites a value that was already sent, and never runs on
+  the edit screen, so a saved deployment is not rewritten by a repository rename.
+- **Deployment type is never guessed.** GitHub cannot tell a plugin from a theme
+  from a static site, so the type, exclude patterns and display name stay the
+  user's choice. The type note was dropped from the suggestion code for that
+  reason.
+- A folder name that another deployment already uses is flagged in the hint,
+  and the plugin never suggests its own folder.
+- Only successful repository lookups are cached (5 minutes), so a failed lookup
+  is retried the next time the form is opened.
+
 ## [0.1.5] - 2026-11-24
 
 ### Fixed

@@ -71,6 +71,12 @@
 	font-size: 12px;
 }
 
+.gs-hint {
+	margin: 0 0 .75em 1.5em;
+	color: #646970;
+	font-size: 12px;
+}
+
 .gs-ok {
 	color: #007017;
 }

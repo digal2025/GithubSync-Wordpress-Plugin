@@ -10,6 +10,7 @@ namespace GitHubSync\Admin;
 use GitHubSync\Database\DeploymentRepository;
 use GitHubSync\Domain\DestinationPolicy;
 use GitHubSync\GitHub\GitHubApiClient;
+use GitHubSync\GitHub\RepositoryPrefill;
 use GitHubSync\Security\Capability;
 use GitHubSync\Security\InputValidator;
 
@@ -48,6 +49,8 @@ final class DeploymentFormPage {
 
 		$branches     = array();
 		$branch_error = '';
+		$meta         = null;
+		$meta_error   = '';
 
 		$valid_repo = InputValidator::repository_full_name( $repo_param );
 
@@ -67,6 +70,14 @@ final class DeploymentFormPage {
 					set_transient( $cache_key, $branches, 5 * MINUTE_IN_SECONDS );
 				}
 			}
+
+			$lookup = RepositoryPrefill::metadata( null, $valid_repo );
+
+			if ( is_wp_error( $lookup ) ) {
+				$meta_error = $lookup->get_error_message();
+			} else {
+				$meta = $lookup;
+			}
 		}
 
 		$data = array(
@@ -76,6 +87,8 @@ final class DeploymentFormPage {
 			'branches'     => $branches,
 			'branch_error' => $branch_error,
 			'repo_param'   => $repo_param,
+			'repo_meta'    => $meta,
+			'repo_error'   => $meta_error,
 		);
 
 		include GITHUBSYNC_DIR . 'templates/deployment-form.php';
