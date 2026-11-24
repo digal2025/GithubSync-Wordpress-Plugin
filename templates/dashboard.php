@@ -14,6 +14,75 @@ $gs_connected = ! empty( $data['connected'] );
 	<h1 class="gs-title"><?php esc_html_e( 'GitHubSync', 'githubsync' ); ?></h1>
 	<p class="gs-subtitle"><?php esc_html_e( 'Deploy selected files from GitHub to this WordPress installation on push.', 'githubsync' ); ?></p>
 
+	<?php
+	$gs_steps   = isset( $data['steps'] ) ? (array) $data['steps'] : array();
+	$gs_done    = 0;
+	foreach ( $gs_steps as $gs_step ) {
+		if ( ! empty( $gs_step['done'] ) ) {
+			$gs_done++;
+		}
+	}
+	$gs_total   = count( $gs_steps );
+	$gs_complete = $gs_total > 0 && $gs_done === $gs_total;
+	$gs_cron_ok = empty( $data['cron_disabled'] ) && ! empty( $data['cron_scheduled'] );
+	?>
+
+	<div class="gs-card gs-card--wide gs-card--<?php echo $gs_complete ? 'ok' : 'bad'; ?>">
+		<h2><?php esc_html_e( 'Setup checklist', 'githubsync' ); ?></h2>
+
+		<p class="gs-muted">
+			<?php
+			printf(
+				/* translators: 1: completed steps, 2: total steps. */
+				esc_html__( '%1$d of %2$d steps complete. Work through them in order; each step links to the page where it is done.', 'githubsync' ),
+				(int) $gs_done,
+				(int) $gs_total
+			);
+			?>
+		</p>
+
+		<ol class="gs-steps">
+			<?php foreach ( $gs_steps as $gs_step ) : ?>
+				<?php
+				$gs_is_done = ! empty( $gs_step['done'] );
+				$gs_page    = isset( $gs_step['action'][1] ) ? (string) $gs_step['action'][1] : '';
+				$gs_label   = isset( $gs_step['action'][0] ) ? (string) $gs_step['action'][0] : '';
+				?>
+				<li class="gs-step<?php echo $gs_is_done ? ' gs-step--done' : ''; ?>">
+					<p class="gs-step__head">
+						<strong><?php echo esc_html( $gs_step['title'] ); ?></strong>
+						<span class="gs-badge gs-badge--<?php echo $gs_is_done ? 'success' : 'warning'; ?>">
+							<?php echo $gs_is_done ? esc_html__( 'Done', 'githubsync' ) : esc_html__( 'To do', 'githubsync' ); ?>
+						</span>
+					</p>
+					<p><?php echo esc_html( $gs_step['body'] ); ?></p>
+					<p class="gs-muted gs-step__state">
+						<?php echo esc_html( $gs_is_done ? $gs_step['help'] : $gs_step['missing'] ); ?>
+					</p>
+					<?php if ( '' !== $gs_page && '' !== $gs_label ) : ?>
+						<p>
+							<a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $gs_page ) ); ?>">
+								<?php echo esc_html( $gs_label ); ?>
+							</a>
+						</p>
+					<?php endif; ?>
+				</li>
+			<?php endforeach; ?>
+		</ol>
+
+		<p class="gs-muted">
+			<?php
+			if ( ! empty( $data['cron_disabled'] ) ) {
+				esc_html_e( 'WP-Cron is disabled on this site (DISABLE_WP_CRON). Deployments are only run when a system cron calls wp-cron.php.', 'githubsync' );
+			} elseif ( $gs_cron_ok ) {
+				esc_html_e( 'WP-Cron is enabled and the deployment queue tick is scheduled.', 'githubsync' );
+			} elseif ( $gs_total > 0 ) {
+				esc_html_e( 'The deployment queue tick is not scheduled. It is registered when the plugin is activated; deactivate and reactivate GitHubSync to restore it.', 'githubsync' );
+			}
+			?>
+		</p>
+	</div>
+
 	<div class="gs-grid">
 		<div class="gs-card">
 			<h2><?php esc_html_e( 'GitHub connection', 'githubsync' ); ?></h2>

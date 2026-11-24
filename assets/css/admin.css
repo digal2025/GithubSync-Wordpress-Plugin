@@ -180,6 +180,61 @@
 	list-style: disc;
 }
 
+.gs-steps {
+	margin: 12px 0 4px;
+	padding: 0;
+	list-style: none;
+	counter-reset: gs-step;
+}
+
+.gs-step {
+	position: relative;
+	margin: 0 0 8px;
+	padding: 12px 14px 4px 46px;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #dba617;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.gs-step--done {
+	border-left-color: #00a32a;
+}
+
+.gs-step::before {
+	counter-increment: gs-step;
+	content: counter(gs-step);
+	position: absolute;
+	top: 12px;
+	left: 14px;
+	width: 22px;
+	height: 22px;
+	line-height: 22px;
+	text-align: center;
+	border-radius: 50%;
+	background: #f0f0f1;
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.gs-step--done::before {
+	background: #00a32a;
+	color: #fff;
+}
+
+.gs-step__head {
+	margin: 0 0 6px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.gs-step__state {
+	margin-top: -6px;
+}
+
 .gs-code {
 	background: #f6f7f7;
 	border: 1px solid #dcdcde;

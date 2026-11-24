@@ -63,8 +63,106 @@ final class DashboardPage {
 			'queue_count'    => $queue,
 			'backup_usage'   => Helpers::human_bytes( $backups->usage() ),
 			'cron_disabled'  => Queue::cron_disabled(),
+			'cron_scheduled' => (bool) wp_next_scheduled( Queue::TICK_HOOK ),
+			'steps'          => self::steps( $auth->is_connected(), CredentialVault::is_configured(), $all, $recent ),
 		);
 
 		include GITHUBSYNC_DIR . 'templates/dashboard.php';
+	}
+
+	/**
+	 * Setup checklist with live state.
+	 *
+	 * A step is only marked done from stored data: connected credentials,
+	 * a usable encryption key, saved deployments and recorded jobs. Whether
+	 * a webhook has actually been added on GitHub cannot be read without
+	 * asking GitHub, so that step stays open until a webhook-triggered job
+	 * is recorded and says so in its text.
+	 *
+	 * @param bool  $connected     Whether GitHub credentials are stored.
+	 * @param bool  $encryption_ok Whether credentials can be stored at all.
+	 * @param array $deployments   All deployments.
+	 * @param array $recent        Recent jobs.
+	 * @return array[]
+	 */
+	private static function steps( $connected, $encryption_ok, array $deployments, array $recent ) {
+		$auto = array_values(
+			array_filter(
+				$deployments,
+				static function ( $row ) {
+					return (int) $row['auto_deploy'] === 1 && 'active' === (string) $row['status'];
+				}
+			)
+		);
+
+		$auto = array_values(
+			array_filter(
+				$deployments,
+				static function ( $row ) {
+					return (int) $row['auto_deploy'] === 1 && 'active' === (string) $row['status'];
+				}
+			)
+		);
+
+		$pushed   = false;
+		$deployed = false;
+
+		foreach ( $recent as $job ) {
+			if ( 'webhook' === (string) $job['trigger_type'] ) {
+				$pushed = true;
+			}
+			if ( 'success' === $job['status'] && 'webhook' === (string) $job['trigger_type'] ) {
+				$deployed = true;
+			}
+		}
+
+		$first = ! empty( $deployments ) ? (int) $deployments[0]['id'] : 0;
+
+		return array(
+			array(
+				'title'  => __( 'Create the encryption key', 'githubsync' ),
+				'done'   => $encryption_ok,
+				'body'   => __( 'Credentials are encrypted before they are stored, so nothing can be saved until a key exists. GitHubSync writes a key file outside the web root; if the site cannot write there, define GITHUBSYNC_ENCRYPTION_KEY in wp-config.php instead.', 'githubsync' ),
+				'action' => array( __( 'Open Settings', 'githubsync' ), 'githubsync-settings' ),
+				'help'   => __( 'Status: key configured.', 'githubsync' ),
+				'missing' => __( 'No usable key yet. Click “Create key file” on the Settings page.', 'githubsync' ),
+			),
+			array(
+				'title'  => __( 'Connect GitHub', 'githubsync' ),
+				'done'   => $connected,
+				'body'   => __( 'Create a GitHub App (App ID, installation ID, private key) and install it on the repository you want to deploy, or use a fine-grained token with Contents (read) and Metadata (read). The plugin only reads; it never writes to GitHub.', 'githubsync' ),
+				'action' => array( __( 'Open GitHub Connection', 'githubsync' ), 'githubsync-connection' ),
+				'help'   => __( 'Status: credentials stored.', 'githubsync' ),
+				'missing' => __( 'Save a GitHub App or token on the connection page.', 'githubsync' ),
+			),
+			array(
+				'title'  => __( 'Add a deployment', 'githubsync' ),
+				'done'   => ! empty( $deployments ),
+				'body'   => __( 'Pick a repository and branch, a destination type (theme, plugin or static site) and the directory slug under wp-content. Only files inside that destination are written; nothing else on the site is touched.', 'githubsync' ),
+				'action' => array( __( 'Add Deployment', 'githubsync' ), 'githubsync-deployment-new' ),
+				'help'   => __( 'Status: at least one deployment saved.', 'githubsync' ),
+				'missing' => __( 'No deployment saved yet.', 'githubsync' ),
+			),
+			array(
+				'title'  => __( 'Add the webhook on GitHub', 'githubsync' ),
+				'done'   => $pushed,
+				'body'   => __( 'Open the deployment page and copy its Payload URL and Secret. On GitHub: repository → Settings → Webhooks → Add webhook. Content type must be application/json (form-encoded bodies fail signature checks), paste the secret, enable SSL verification, subscribe to push events only, and leave Active checked. GitHub sends a ping immediately; Recent Deliveries should show 200 with the body pong.', 'githubsync' ),
+				'action' => $first
+					? array( __( 'Open deployment', 'githubsync' ), 'githubsync-deployment&id=' . $first )
+					: array( __( 'Add Deployment', 'githubsync' ), 'githubsync-deployment-new' ),
+				'help'   => __( 'Status: a webhook delivery has been received.', 'githubsync' ),
+				'missing' => __( 'No webhook delivery recorded yet. Adding the webhook is a manual step: this version has no API call that creates it for you.', 'githubsync' ),
+			),
+			array(
+				'title'  => __( 'Push to the deployed branch', 'githubsync' ),
+				'done'   => $deployed,
+				'body'   => __( 'Commit to the branch the deployment watches. GitHubSync accepts the delivery, queues a job, and deploys on the next run. WP-Cron drives it, so a busy site with low traffic can be slow; a system cron hitting wp-cron.php every five minutes is more reliable.', 'githubsync' ),
+				'action' => array( __( 'Open History', 'githubsync' ), 'githubsync-history' ),
+				'help'   => __( 'Status: a push-triggered deployment succeeded.', 'githubsync' ),
+				'missing' => $pushed
+					? __( 'A push was received but has not completed successfully yet. Check the job on the History page.', 'githubsync' )
+					: __( 'Nothing has been deployed from a push yet.', 'githubsync' ),
+			),
+		);
 	}
 }
