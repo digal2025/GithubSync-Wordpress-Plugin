@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,10 @@ system cron or use *Run queue now*.
 
 == Changelog ==
 
+= 0.1.2 =
+* The dashboard setup checklist now opens in a modal dialog from a "Show setup checklist" button, instead of occupying the top of the dashboard. The carousel, step dots and the close-only-when-complete rule are unchanged.
+* Fix: a duplicated wrapper element in the dashboard template.
+
 = 0.1.1 =
 * Dashboard setup checklist: five steps with live completion state, shown as a carousel with Previous/Next and step dots.
 * The checklist opens on the first unfinished step, reports WP-Cron and queue-tick health, and can be closed only once every step is complete.
@@ -105,6 +109,9 @@ system cron or use *Run queue now*.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.1.2 =
+Moves the dashboard setup checklist into a dialog. No settings change needed.
 
 = 0.1.1 =
 Adds a step-by-step setup checklist to the dashboard.

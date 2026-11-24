@@ -180,37 +180,118 @@
 	list-style: disc;
 }
 
-.gs-checklist {
-	position: relative;
+.gs-checklist-bar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	margin: 0 0 8px;
 }
 
-.gs-checklist--complete {
-	border-color: #00a32a;
+.gs-checklist-bar__open .gs-badge {
+	margin-left: 6px;
 }
 
-.gs-checklist__head {
+.gs-checklist-bar__form {
+	margin: 0;
+}
+
+.gs-dialog {
+	width: min(680px, calc(100vw - 32px));
+	max-height: calc(100vh - 64px);
+	margin: 8vh auto auto;
+	padding: 0;
+	border: 1px solid #c3c4c7;
+	border-radius: 6px;
+	background: #fff;
+	color: #1d2327;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+	overflow: visible;
+}
+
+.gs-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.55);
+}
+
+.gs-dialog--complete {
+	border-top: 4px solid #00a32a;
+}
+
+.gs-dialog:not(.gs-dialog--complete) {
+	border-top: 4px solid #dba617;
+}
+
+.gs-dialog__inner {
+	max-height: calc(100vh - 64px);
+	overflow-y: auto;
+	padding: 20px 22px 16px;
+	box-sizing: border-box;
+}
+
+/* Fallback for browsers without <dialog>: render as an inline card. */
+.gs-dialog[open] {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+}
+
+.gs-dialog__head {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+}
+
+.gs-dialog__title {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.gs-dialog__title h2 {
+	margin: 0 0 4px;
+	padding: 0;
+	font-size: 18px;
+}
+
+.gs-dialog__x {
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: #50575e;
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.gs-dialog__x:hover,
+.gs-dialog__x:focus {
+	background: #f0f0f1;
+	color: #1d2327;
+}
+
+.gs-dialog__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 	flex-wrap: wrap;
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid #dcdcde;
 }
 
-.gs-checklist__title {
-	flex: 1 1 320px;
-}
-
-.gs-checklist__title h2 {
-	margin: 0 0 4px;
-}
-
-.gs-checklist__close {
+.gs-dialog__hint {
 	margin: 0;
+	font-size: 12px;
+	flex: 1 1 auto;
 }
 
-.gs-checklist__close-hint {
-	margin: 0 0 4px;
-	font-size: 12px;
+.gs-dialog__dismiss {
+	margin: 0 0 0 auto;
 }
 
 .gs-progress {
@@ -229,7 +310,7 @@
 	transition: width 0.2s ease;
 }
 
-.gs-checklist--complete .gs-progress__bar {
+.gs-dialog--complete .gs-progress__bar {
 	background: #00a32a;
 }
 
@@ -329,13 +410,9 @@
 	font-size: 12px;
 }
 
-.gs-checklist__cron {
+.gs-dialog__cron {
 	margin: 12px 0 0;
 	font-size: 12px;
-}
-
-.gs-checklist-reopen {
-	margin: 0 0 4px;
 }
 
 @media screen and (max-width: 782px) {

@@ -17,6 +17,20 @@ All notable changes to GitHubSync are recorded here. The format follows
   [`docs/DEPLOYMENT-RECOVERY.md`](docs/DEPLOYMENT-RECOVERY.md), and
   [`docs/TESTING.md`](docs/TESTING.md).
 
+## [0.1.2] - 2026-11-24
+
+### Changed
+
+- **The setup checklist is now a dialog.** It opens from a *Show setup checklist*
+  button in the dashboard header, shows the completed-step count, and closes with
+  the × button, Escape, a click on the backdrop, or *Hide for now*. The carousel,
+  step dots, progress bar and the rule that the checklist can only be marked
+  closed once every step is complete are unchanged.
+
+### Fixed
+
+- A duplicated `gs-grid` wrapper in `templates/dashboard.php`.
+
 ## [0.1.1] - 2026-11-24
 
 ### Added

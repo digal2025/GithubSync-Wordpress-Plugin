@@ -1,7 +1,8 @@
 /**
  * GitHubSync admin behaviour.
  *
- * Adds copy buttons next to read-only webhook fields. All server-side
+ * Adds copy buttons next to read-only webhook fields, drives the setup
+ * checklist carousel, and opens it in a modal dialog. All server-side
  * validation and authorisation happens in PHP; this is convenience only.
  */
 (function () {
@@ -108,8 +109,52 @@
 		show(current);
 	}
 
+	/**
+	 * Setup checklist dialog.
+	 *
+	 * Opens the <dialog> from any [data-gs-dialog-open] button and keeps the
+	 * focus inside it. Closing is presentation only; whether the checklist may
+	 * be marked closed is decided in PHP.
+	 */
+	function initDialog() {
+		var dialog = document.getElementById('gs-setup-checklist');
+		var trigger = document.querySelector('[data-gs-dialog-open="gs-setup-checklist"]');
+
+		if (!dialog || !trigger || typeof dialog.showModal !== 'function') {
+			return;
+		}
+
+		trigger.addEventListener('click', function () {
+			if (!dialog.open) {
+				dialog.showModal();
+			}
+			var slide = dialog.querySelector('[data-gs-slide]:not([hidden]) a, [data-gs-slide]:not([hidden]) button');
+			if (slide) {
+				slide.focus();
+			}
+		});
+
+		Array.prototype.forEach.call(dialog.querySelectorAll('[data-gs-dialog-close]'), function (button) {
+			button.addEventListener('click', function () {
+				dialog.close();
+			});
+		});
+
+		dialog.addEventListener('click', function (event) {
+			// Clicking the background closes; clicks inside the panel do not.
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+
+		dialog.addEventListener('close', function () {
+			trigger.focus();
+		});
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		Array.prototype.forEach.call(document.querySelectorAll('[data-gs-carousel]'), initCarousel);
+		initDialog();
 
 		var fields = document.querySelectorAll('input[readonly][type="text"]');
 
