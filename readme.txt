@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,10 +97,17 @@ system cron or use *Run queue now*.
 
 == Changelog ==
 
+= 0.1.1 =
+* Dashboard setup checklist: five steps with live completion state, shown as a carousel with Previous/Next and step dots.
+* The checklist opens on the first unfinished step, reports WP-Cron and queue-tick health, and can be closed only once every step is complete.
+
 = 0.1.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.1.1 =
+Adds a step-by-step setup checklist to the dashboard.
 
 = 0.1.0 =
 Initial release.

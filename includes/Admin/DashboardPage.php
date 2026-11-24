@@ -25,6 +25,11 @@ defined( 'ABSPATH' ) || exit;
 final class DashboardPage {
 
 	/**
+	 * User meta flag set when the completed checklist is closed.
+	 */
+	public const DISMISSED_META = 'githubsync_checklist_dismissed';
+
+	/**
 	 * Render.
 	 *
 	 * @return void
@@ -65,9 +70,25 @@ final class DashboardPage {
 			'cron_disabled'  => Queue::cron_disabled(),
 			'cron_scheduled' => (bool) wp_next_scheduled( Queue::TICK_HOOK ),
 			'steps'          => self::steps( $auth->is_connected(), CredentialVault::is_configured(), $all, $recent ),
+			'dismissed'      => (bool) get_user_meta( get_current_user_id(), self::DISMISSED_META, true ),
 		);
 
 		include GITHUBSYNC_DIR . 'templates/dashboard.php';
+	}
+
+	/**
+	 * Whether every setup step is complete.
+	 *
+	 * @return bool
+	 */
+	public static function setup_complete() {
+		foreach ( self::steps( ( new GitHubAuth() )->is_connected(), CredentialVault::is_configured(), ( new DeploymentRepository() )->all(), ( new JobRepository() )->recent( 0, 10 ) ) as $step ) {
+			if ( empty( $step['done'] ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -86,24 +107,6 @@ final class DashboardPage {
 	 * @return array[]
 	 */
 	private static function steps( $connected, $encryption_ok, array $deployments, array $recent ) {
-		$auto = array_values(
-			array_filter(
-				$deployments,
-				static function ( $row ) {
-					return (int) $row['auto_deploy'] === 1 && 'active' === (string) $row['status'];
-				}
-			)
-		);
-
-		$auto = array_values(
-			array_filter(
-				$deployments,
-				static function ( $row ) {
-					return (int) $row['auto_deploy'] === 1 && 'active' === (string) $row['status'];
-				}
-			)
-		);
-
 		$pushed   = false;
 		$deployed = false;
 

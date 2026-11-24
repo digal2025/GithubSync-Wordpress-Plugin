@@ -180,59 +180,177 @@
 	list-style: disc;
 }
 
-.gs-steps {
-	margin: 12px 0 4px;
-	padding: 0;
-	list-style: none;
-	counter-reset: gs-step;
+.gs-checklist {
+	position: relative;
 }
 
-.gs-step {
-	position: relative;
-	margin: 0 0 8px;
-	padding: 12px 14px 4px 46px;
+.gs-checklist--complete {
+	border-color: #00a32a;
+}
+
+.gs-checklist__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.gs-checklist__title {
+	flex: 1 1 320px;
+}
+
+.gs-checklist__title h2 {
+	margin: 0 0 4px;
+}
+
+.gs-checklist__close {
+	margin: 0;
+}
+
+.gs-checklist__close-hint {
+	margin: 0 0 4px;
+	font-size: 12px;
+}
+
+.gs-progress {
+	height: 6px;
+	margin: 10px 0 0;
+	max-width: 420px;
+	background: #f0f0f1;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.gs-progress__bar {
+	display: block;
+	height: 100%;
+	background: #2271b1;
+	transition: width 0.2s ease;
+}
+
+.gs-checklist--complete .gs-progress__bar {
+	background: #00a32a;
+}
+
+.gs-carousel {
+	display: flex;
+	align-items: stretch;
+	gap: 12px;
+	margin-top: 16px;
+}
+
+.gs-carousel__viewport {
+	flex: 1 1 auto;
+	min-width: 0;
 	border: 1px solid #dcdcde;
-	border-left: 4px solid #dba617;
 	border-radius: 4px;
 	background: #fff;
 }
 
-.gs-step--done {
+.gs-slide {
+	padding: 16px 18px 4px;
+	border-left: 4px solid #dba617;
+	border-radius: 3px;
+}
+
+.gs-slide--done {
 	border-left-color: #00a32a;
 }
 
-.gs-step::before {
-	counter-increment: gs-step;
-	content: counter(gs-step);
-	position: absolute;
-	top: 12px;
-	left: 14px;
-	width: 22px;
-	height: 22px;
-	line-height: 22px;
-	text-align: center;
-	border-radius: 50%;
-	background: #f0f0f1;
-	color: #50575e;
-	font-size: 12px;
-	font-weight: 600;
+.gs-slide[hidden] {
+	display: none;
 }
 
-.gs-step--done::before {
-	background: #00a32a;
-	color: #fff;
+.gs-slide__kicker {
+	margin: 0 0 2px;
+	color: #646970;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
-.gs-step__head {
-	margin: 0 0 6px;
+.gs-slide__title {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
+	margin: 0 0 8px;
 }
 
-.gs-step__state {
+.gs-slide__state {
 	margin-top: -6px;
+}
+
+.gs-carousel__nav {
+	align-self: center;
+	white-space: nowrap;
+}
+
+.gs-carousel__nav[disabled] {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.gs-carousel__status {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.gs-dots {
+	display: flex;
+	gap: 6px;
+}
+
+.gs-dot {
+	width: 12px;
+	height: 12px;
+	padding: 0;
+	border: 1px solid #8c8f94;
+	border-radius: 50%;
+	background: #fff;
+	cursor: pointer;
+}
+
+.gs-dot--done {
+	background: #00a32a;
+	border-color: #00a32a;
+}
+
+.gs-dot[aria-selected="true"] {
+	box-shadow: 0 0 0 2px #2271b1;
+	border-color: #2271b1;
+}
+
+.gs-carousel__counter {
+	font-size: 12px;
+}
+
+.gs-checklist__cron {
+	margin: 12px 0 0;
+	font-size: 12px;
+}
+
+.gs-checklist-reopen {
+	margin: 0 0 4px;
+}
+
+@media screen and (max-width: 782px) {
+	.gs-carousel {
+		flex-wrap: wrap;
+	}
+
+	.gs-carousel__viewport {
+		order: -1;
+		flex-basis: 100%;
+	}
+
+	.gs-carousel__nav {
+		flex: 1 1 0;
+	}
 }
 
 .gs-code {

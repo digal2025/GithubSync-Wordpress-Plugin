@@ -106,6 +106,9 @@ final class AdminMenu {
 			'logs_cleared'        => __( 'Deployment logs cleared.', 'githubsync' ),
 			'queue_ran'           => __( 'Queue processed.', 'githubsync' ),
 			'backups_pruned'      => __( 'Old backups pruned.', 'githubsync' ),
+			'checklist_closed'    => __( 'Setup checklist closed. You can show it again at any time from the dashboard.', 'githubsync' ),
+			'checklist_incomplete' => __( 'The setup checklist cannot be closed until every step is complete.', 'githubsync' ),
+			'checklist_restored'  => __( 'Setup checklist reopened.', 'githubsync' ),
 			'error'               => __( 'The action could not be completed.', 'githubsync' ),
 		);
 

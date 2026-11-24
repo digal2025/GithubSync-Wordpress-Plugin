@@ -55,6 +55,8 @@ final class Actions {
 			'githubsync_clear_logs',
 			'githubsync_run_queue',
 			'githubsync_prune_backups',
+			'githubsync_dismiss_checklist',
+			'githubsync_restore_checklist',
 		);
 
 		foreach ( $actions as $action ) {
@@ -120,6 +122,12 @@ final class Actions {
 				break;
 			case 'githubsync_prune_backups':
 				self::prune_backups();
+				break;
+			case 'githubsync_dismiss_checklist':
+				self::dismiss_checklist();
+				break;
+			case 'githubsync_restore_checklist':
+				self::restore_checklist();
 				break;
 			default:
 				self::back( 'githubsync', 'error' );
@@ -679,5 +687,40 @@ final class Actions {
 		}
 
 		self::back( 'githubsync-tools', 'backups_pruned' );
+	}
+
+	/**
+	 * Hide the dashboard setup checklist.
+	 *
+	 * Only allowed once every step is complete: the checklist is the only
+	 * in-plugin map of what a working install needs, so it is not dismissible
+	 * while steps remain open. Completion is recomputed here rather than
+	 * trusted from the form.
+	 *
+	 * @return void
+	 */
+	private static function dismiss_checklist() {
+		self::verify( 'githubsync_dismiss_checklist' );
+
+		if ( ! DashboardPage::setup_complete() ) {
+			self::back( 'githubsync', 'checklist_incomplete', 'error' );
+		}
+
+		update_user_meta( get_current_user_id(), DashboardPage::DISMISSED_META, 1 );
+
+		self::back( 'githubsync', 'checklist_closed' );
+	}
+
+	/**
+	 * Show a closed checklist again.
+	 *
+	 * @return void
+	 */
+	private static function restore_checklist() {
+		self::verify( 'githubsync_restore_checklist' );
+
+		delete_user_meta( get_current_user_id(), DashboardPage::DISMISSED_META );
+
+		self::back( 'githubsync', 'checklist_restored' );
 	}
 }

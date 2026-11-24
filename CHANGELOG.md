@@ -17,6 +17,22 @@ All notable changes to GitHubSync are recorded here. The format follows
   [`docs/DEPLOYMENT-RECOVERY.md`](docs/DEPLOYMENT-RECOVERY.md), and
   [`docs/TESTING.md`](docs/TESTING.md).
 
+## [0.1.1] - 2026-11-24
+
+### Added
+
+- **Dashboard setup checklist.** Five steps — encryption key, GitHub connection,
+  deployment, webhook, first push — shown as a carousel with Previous/Next
+  buttons and step dots. Each step states what to do, links to the page where it
+  is done, and is marked done only from data the plugin can observe (key
+  configured, credentials stored, deployments saved, a `webhook`-triggered job
+  recorded). The webhook step says outright that adding the webhook on GitHub is
+  manual, because no API call creates it.
+- The checklist opens on the first unfinished step, shows a progress bar, and
+  reports WP-Cron and deployment-queue-tick health below the slides.
+- **Close checklist** appears only once every step is done; it is stored per user
+  and checked server-side, and **Show the setup checklist again** restores it.
+
 ## [0.1.0] - 2026-11-24
 
 First public release. This is the initial implementation of the specification in
