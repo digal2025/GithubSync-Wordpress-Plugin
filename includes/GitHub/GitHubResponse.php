@@ -64,9 +64,9 @@ final class GitHubResponse {
 			return $self;
 		}
 
-		$self->status  = (int) wp_remote_retrieve_response_code( $response );
-		$self->body    = (string) wp_remote_retrieve_body( $response );
-		$self->headers = array_change_key_case( (array) wp_remote_retrieve_headers( $response ), CASE_LOWER );
+		$self->status = (int) wp_remote_retrieve_response_code( $response );
+		$self->body   = (string) wp_remote_retrieve_body( $response );
+		$self->headers = array_change_key_case( self::headers_to_array( wp_remote_retrieve_headers( $response ) ), CASE_LOWER );
 
 		if ( '' !== $self->body ) {
 			$decoded = json_decode( $self->body, true );
@@ -78,6 +78,31 @@ final class GitHubResponse {
 		}
 
 		return $self;
+	}
+
+	/**
+	 * Normalise a WP HTTP header container to a plain array.
+	 *
+	 * `wp_remote_retrieve_headers()` returns an array in older WordPress
+	 * releases and a `WpOrg\Requests\Utility\CaseInsensitiveDictionary` from
+	 * 6.2 onwards. Casting the dictionary to an array yields only its private
+	 * storage key, so every header would read as empty.
+	 *
+	 * @param array|object $headers Header container.
+	 * @return array
+	 */
+	private static function headers_to_array( $headers ) {
+		if ( is_object( $headers ) && method_exists( $headers, 'getAll' ) ) {
+			$all = $headers->getAll();
+
+			return is_array( $all ) ? $all : array();
+		}
+
+		if ( $headers instanceof \Traversable ) {
+			return iterator_to_array( $headers );
+		}
+
+		return is_array( $headers ) ? $headers : array();
 	}
 
 	/**

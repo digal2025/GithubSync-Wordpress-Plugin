@@ -8,6 +8,28 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 Nothing yet.
 
+## [0.1.7] - 2026-11-24
+
+### Fixed
+
+- **Deploying a repository archive failed with `ARCHIVE_INVALID` — "GitHub did
+  not provide an archive location."** GitHub answers the zipball request with a
+  redirect to `codeload.github.com`, but GitHubSync read the response headers in
+  a way that WordPress 6.2+ does not support, so the `Location` header was always
+  read as empty and every deploy stopped before downloading anything. The
+  headers are now read correctly and the archive is fetched and extracted as
+  normal.
+- **Pagination and rate-limit handling read the same broken headers.** The
+  `Link` header (used to tell whether more branches or repositories follow) and
+  the `Retry-After` / `X-RateLimit-*` headers are now read as GitHub sends them.
+  Previously the plugin always believed it was on the last page and always fell
+  back to a fixed retry delay.
+
+### Notes
+
+- Only the header handling changed. Deployments, settings and stored credentials
+  are untouched.
+
 ## [0.1.6] - 2026-11-24
 
 ### Added

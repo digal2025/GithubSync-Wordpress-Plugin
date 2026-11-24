@@ -320,6 +320,75 @@ Assert::true( is_array( $row ), 'log row written' );
 Assert::false( false !== strpos( (string) $row['context_json'], $pat ), 'the token is not in the log context' );
 Assert::false( false !== strpos( (string) $row['message'], $pat ), 'the token is not in the log message' );
 
+// -------------------------------------------------- response headers ---
+
+CaseRunner::case( 'response headers survive the WP HTTP object form' );
+// WordPress 6.2+ returns a CaseInsensitiveDictionary from
+// wp_remote_retrieve_headers(). Casting it to an array used to expose only its
+// private storage key, so every header lookup returned '' and archive_url()
+// reported "GitHub did not provide an archive location."
+$dict = new WpOrg\Requests\Utility\CaseInsensitiveDictionary(
+	array( 'Location' => 'https://codeload.github.com/o/r/legacy.zip/abc' )
+);
+$normalised = GitHubResponse::from_wp(
+	array(
+		'headers'  => $dict,
+		'body'     => '',
+		'response' => array(
+			'code'    => 302,
+			'message' => 'Found',
+		),
+		'cookies'  => array(),
+	)
+);
+Assert::same( 302, $normalised->status, 'a dictionary response keeps its status' );
+Assert::same(
+	'https://codeload.github.com/o/r/legacy.zip/abc',
+	$normalised->header( 'location' ),
+	'a Location header is readable whatever case it arrived in'
+);
+Assert::true( $normalised->is_redirect(), 'the dictionary response is still a redirect' );
+
+$plain = GitHubResponse::from_wp(
+	array(
+		'headers'  => array( 'Location' => 'https://codeload.github.com/o/r/legacy.zip/abc' ),
+		'body'     => '',
+		'response' => array(
+			'code'    => 302,
+			'message' => 'Found',
+		),
+		'cookies'  => array(),
+	)
+);
+Assert::same( $normalised->header( 'location' ), $plain->header( 'location' ), 'array and dictionary responses agree' );
+
+CaseRunner::case( 'archive_url() follows the zipball redirect' );
+$pat = 'ghp_' . str_repeat( 'Q7', 20 );
+$auth->connect_pat( $pat );
+
+$redirect = static function ( $pre, $args, $url ) {
+	return array(
+		'headers'  => new WpOrg\Requests\Utility\CaseInsensitiveDictionary(
+			array( 'Location' => 'https://codeload.github.com/o/r/legacy.zip/abc?token=x' )
+		),
+		'body'     => '',
+		'response' => array(
+			'code'    => 302,
+			'message' => 'Found',
+		),
+		'cookies'  => array(),
+	);
+};
+
+add_filter( 'pre_http_request', $redirect, 10, 3 );
+$url = ( new GitHubApiClient( $auth ) )->archive_url( 'o/r', str_repeat( 'a', 40 ) );
+remove_filter( 'pre_http_request', $redirect, 10 );
+
+$archive_error = is_wp_error( $url ) ? $url->get_error_code() . ' ' . $url->get_error_message() : '';
+Assert::true( ! is_wp_error( $url ), 'the archive URL is resolved, not rejected' . ( '' === $archive_error ? '' : ' [' . $archive_error . ']' ) );
+$archive_is_url = is_string( $url ) && 'codeload.github.com' === wp_parse_url( $url, PHP_URL_HOST );
+Assert::true( $archive_is_url, 'a codeload URL is returned' . ( is_string( $url ) ? ' [' . $url . ']' : '' ) );
+
 // ---------------------------------------------------------------- tidy up ---
 
 ( new GitHubAuth() )->disconnect();
