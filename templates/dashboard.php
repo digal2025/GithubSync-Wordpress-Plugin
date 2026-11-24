@@ -107,10 +107,6 @@ $gs_connected = ! empty( $data['connected'] );
 				</div>
 
 				<div class="gs-carousel" role="group" aria-roledescription="<?php esc_attr_e( 'carousel', 'githubsync' ); ?>" aria-label="<?php esc_attr_e( 'Setup steps', 'githubsync' ); ?>">
-					<button type="button" class="button gs-carousel__nav gs-carousel__nav--prev" data-gs-prev>
-						<span aria-hidden="true">&larr;</span> <?php esc_html_e( 'Previous', 'githubsync' ); ?>
-					</button>
-
 					<div class="gs-carousel__viewport">
 						<?php foreach ( $gs_steps as $gs_i => $gs_step ) : ?>
 							<?php
@@ -157,10 +153,6 @@ $gs_connected = ! empty( $data['connected'] );
 							</section>
 						<?php endforeach; ?>
 					</div>
-
-					<button type="button" class="button gs-carousel__nav gs-carousel__nav--next" data-gs-next>
-						<?php esc_html_e( 'Next', 'githubsync' ); ?> <span aria-hidden="true">&rarr;</span>
-					</button>
 				</div>
 
 				<div class="gs-carousel__status">
@@ -177,6 +169,15 @@ $gs_connected = ! empty( $data['connected'] );
 						<?php endforeach; ?>
 					</div>
 					<span class="gs-muted gs-carousel__counter" data-gs-counter aria-live="polite"></span>
+				</div>
+
+				<div class="gs-carousel__nav">
+					<button type="button" class="button gs-carousel__nav-prev" data-gs-prev aria-label="<?php esc_attr_e( 'Previous step', 'githubsync' ); ?>">
+						<span aria-hidden="true">&larr;</span> <?php esc_html_e( 'Previous', 'githubsync' ); ?>
+					</button>
+					<button type="button" class="button gs-carousel__nav-next" data-gs-next aria-label="<?php esc_attr_e( 'Next step', 'githubsync' ); ?>">
+						<?php esc_html_e( 'Next', 'githubsync' ); ?> <span aria-hidden="true">&rarr;</span>
+					</button>
 				</div>
 
 				<p class="gs-muted gs-dialog__cron">

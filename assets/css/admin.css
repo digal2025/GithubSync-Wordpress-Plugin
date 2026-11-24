@@ -315,15 +315,11 @@
 }
 
 .gs-carousel {
-	display: flex;
-	align-items: stretch;
-	gap: 12px;
 	margin-top: 16px;
 }
 
 .gs-carousel__viewport {
-	flex: 1 1 auto;
-	min-width: 0;
+	overflow: hidden;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
 	background: #fff;
@@ -364,11 +360,20 @@
 }
 
 .gs-carousel__nav {
-	align-self: center;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.gs-carousel__nav-prev,
+.gs-carousel__nav-next {
 	white-space: nowrap;
 }
 
-.gs-carousel__nav[disabled] {
+.gs-carousel__nav-prev[disabled],
+.gs-carousel__nav-next[disabled] {
 	opacity: 0.4;
 	cursor: default;
 }
@@ -416,17 +421,10 @@
 }
 
 @media screen and (max-width: 782px) {
-	.gs-carousel {
-		flex-wrap: wrap;
-	}
-
-	.gs-carousel__viewport {
-		order: -1;
-		flex-basis: 100%;
-	}
-
-	.gs-carousel__nav {
+	.gs-carousel__nav-prev,
+	.gs-carousel__nav-next {
 		flex: 1 1 0;
+		text-align: center;
 	}
 }
 
