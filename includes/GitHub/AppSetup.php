@@ -103,6 +103,30 @@ final class AppSetup {
 	}
 
 	/**
+	 * Secret used to sign the App's webhook deliveries.
+	 *
+	 * Generated once and kept in the settings option. The manifest's webhook URL
+	 * carries it, so it has to exist before the App is created.
+	 *
+	 * @return string 32-byte hex string.
+	 */
+	public static function hook_secret() {
+		$settings = get_option( Settings::OPTION, array() );
+		$settings = is_array( $settings ) ? $settings : array();
+		$existing = isset( $settings['app_webhook_secret'] ) ? (string) $settings['app_webhook_secret'] : '';
+
+		if ( 1 === preg_match( '/^[a-f0-9]{64}$/', $existing ) ) {
+			return $existing;
+		}
+
+		$secret                        = bin2hex( random_bytes( 32 ) );
+		$settings['app_webhook_secret'] = $secret;
+		update_option( Settings::OPTION, $settings, false );
+
+		return $secret;
+	}
+
+	/**
 	 * Whether the browser round trip can complete on this site.
 	 *
 	 * GitHub only redirects back to HTTPS (or http://localhost). A site behind
@@ -152,18 +176,26 @@ final class AppSetup {
 	 * @return array
 	 */
 	public function manifest() {
+		// GitHub's manifest schema uses `default_permissions` / `default_events`,
+		// and `hook_attributes.url` is required even when the hook is inactive.
+		// The App is created with the hook off: the URL points at the site webhook
+		// and deployments pick repositories by their own token, so it only becomes
+		// useful once the owner activates it and selects repositories.
 		return array(
-			'name'            => $this->app_name(),
-			'url'             => home_url( '/' ),
+			'name'               => $this->app_name(),
+			'url'                => home_url( '/' ),
 			/* translators: %s: site host. */
-			'description'     => sprintf( __( 'Deploys WordPress themes and plugins from GitHub repositories on %s, with backups and rollback.', 'githubsync' ), $this->host() ),
-			'public'          => false,
-			'redirect_url'    => self::page_url( array( '_gs_return' => '1' ) ),
-			'setup_url'       => self::page_url( array( '_gs_install' => '1' ) ),
-			'callback_urls'   => array(),
-			'hook_attributes' => array( 'active' => false ),
-			'permissions'     => self::permissions(),
-			'events'          => self::events(),
+			'description'        => sprintf( __( 'Deploys WordPress themes and plugins from GitHub repositories on %s, with backups and rollback.', 'githubsync' ), $this->host() ),
+			'public'             => false,
+			'redirect_url'       => self::page_url( array( '_gs_return' => '1' ) ),
+			'setup_url'          => self::page_url( array( '_gs_install' => '1' ) ),
+			'callback_urls'      => array(),
+			'hook_attributes'    => array(
+				'url'    => self::webhook_url( self::hook_secret() ),
+				'active' => false,
+			),
+			'default_permissions' => self::permissions(),
+			'default_events'      => self::events(),
 		);
 	}
 
@@ -647,7 +679,7 @@ final class AppSetup {
 	 * @return string
 	 */
 	public static function webhook_url( $token ) {
-		return add_query_arg( 'token', rawurlencode( (string) $token ), rest_url( 'githubsync/v1/webhook' ) );
+		return rest_url( 'githubsync/v1/webhook/' . rawurlencode( (string) $token ) );
 	}
 
 	/**

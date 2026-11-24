@@ -181,10 +181,23 @@ Assert::true( '' !== $form['action'] && false !== strpos( $form['action'], 'gith
 
 $manifest = json_decode( $form['manifest'], true );
 Assert::true( is_array( $manifest ), 'the manifest is JSON' );
+Assert::true( isset( $manifest['url'] ) && '' !== (string) $manifest['url'], 'the required url key is supplied' );
+Assert::true( isset( $manifest['default_permissions']['contents'] ) && 'read' === $manifest['default_permissions']['contents'], 'permissions use the default_permissions key' );
+Assert::true( isset( $manifest['default_events'] ) && in_array( 'push', (array) $manifest['default_events'], true ), 'events use the default_events key' );
+Assert::false( isset( $manifest['permissions'] ), 'the unsupported permissions key is not sent' );
+Assert::false( isset( $manifest['events'] ), 'the unsupported events key is not sent' );
 Assert::true( isset( $manifest['redirect_url'] ) && false !== strpos( $manifest['redirect_url'], '_gs_return=1' ), 'the redirect URL carries the callback marker' );
 Assert::true( isset( $manifest['setup_url'] ) && false !== strpos( $manifest['setup_url'], '_gs_install=1' ), 'the setup URL carries the install marker' );
 Assert::true( isset( $manifest['hook_attributes']['active'] ) && false === $manifest['hook_attributes']['active'], 'the App webhook starts inactive (deployments need repositories selected)' );
-Assert::false( isset( $manifest['hook_attributes']['url'] ) && '' === $manifest['hook_attributes']['url'], 'no empty hook URL is sent to GitHub' );
+Assert::true( isset( $manifest['hook_attributes']['url'] ) && '' !== (string) $manifest['hook_attributes']['url'], 'the hook URL is supplied because GitHub requires it' );
+Assert::true( false !== strpos( (string) $manifest['hook_attributes']['url'], '/githubsync/v1/webhook/' ), 'the hook URL points at the site webhook route' );
+
+$hook_route = wp_parse_url( (string) $manifest['hook_attributes']['url'], PHP_URL_PATH );
+Assert::true( null !== $hook_route && 1 === preg_match( '#/githubsync/v1/webhook/[a-f0-9]{64}$#', (string) $hook_route ), 'the hook URL uses the path form the webhook route accepts' );
+
+$hook_secret = AppSetup::hook_secret();
+Assert::true( 1 === preg_match( '/^[a-f0-9]{64}$/', $hook_secret ), 'the hook secret is 64 hex characters' );
+Assert::same( $hook_secret, AppSetup::hook_secret(), 'the hook secret is reused, not regenerated' );
 
 $again = $setup->form( $form['state'] );
 Assert::true( is_array( $again ), 'form() re-renders the pending form after a redirect' );

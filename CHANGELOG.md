@@ -8,6 +8,21 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 Nothing yet.
 
+## [0.1.4] - 2026-11-24
+
+### Fixed
+
+- **One-click App setup was rejected by GitHub.** The manifest sent
+  `permissions` and `events`; GitHub's schema names them `default_permissions`
+  and `default_events`, and it refused the registration with
+  `"events", "permissions" are not permitted keys`.
+- The manifest omitted `hook_attributes.url`, which GitHub requires even for an
+  inactive hook (`"url" wasn't supplied`). The App webhook URL is now set to the
+  site's webhook route, signed with a site-wide secret from the new
+  `AppSetup::hook_secret()`.
+- `AppSetup::webhook_url()` built a `?token=` query URL that the
+  `githubsync/v1/webhook/{token}` route never matched. It now uses the path form.
+
 ## [0.1.3] - 2026-11-24
 
 ### Added
