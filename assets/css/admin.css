@@ -1,0 +1,210 @@
+/**
+ * GitHubSync admin styles.
+ */
+
+.gs-wrap {
+	max-width: 1200px;
+}
+
+.gs-title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.gs-subtitle {
+	color: #50575e;
+	margin-top: -6px;
+}
+
+.gs-section-title {
+	margin-top: 28px;
+	padding-top: 18px;
+	border-top: 1px solid #dcdcde;
+}
+
+.gs-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 16px;
+	margin: 16px 0 8px;
+}
+
+.gs-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 16px 18px;
+	box-sizing: border-box;
+}
+
+.gs-card h2 {
+	margin-top: 0;
+	font-size: 14px;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	color: #50575e;
+}
+
+.gs-card--wide {
+	grid-column: 1 / -1;
+}
+
+.gs-card--ok {
+	border-left: 4px solid #00a32a;
+}
+
+.gs-card--bad {
+	border-left: 4px solid #d63638;
+}
+
+.gs-big {
+	font-size: 26px;
+	font-weight: 600;
+	margin: 4px 0;
+	line-height: 1.2;
+}
+
+.gs-muted {
+	color: #646970;
+	font-size: 12px;
+}
+
+.gs-ok {
+	color: #007017;
+}
+
+.gs-bad {
+	color: #b32d2e;
+}
+
+.gs-warn {
+	color: #996800;
+}
+
+.gs-table {
+	margin-top: 8px;
+}
+
+.gs-table td,
+.gs-table th {
+	vertical-align: top;
+}
+
+.gs-path {
+	word-break: break-all;
+}
+
+.gs-break {
+	word-break: break-all;
+	white-space: normal;
+}
+
+.gs-badge {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.7;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+}
+
+.gs-badge--success {
+	background: #d1f0d8;
+	color: #00631a;
+}
+
+.gs-badge--info {
+	background: #dcebfd;
+	color: #0b4a8f;
+}
+
+.gs-badge--warning {
+	background: #fdf0d2;
+	color: #7a5300;
+}
+
+.gs-badge--error {
+	background: #fbdcdc;
+	color: #8a1f1f;
+}
+
+.gs-badge--muted {
+	background: #eaeaea;
+	color: #50575e;
+}
+
+.gs-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+}
+
+.gs-inline {
+	display: inline-block;
+	margin: 0;
+}
+
+.gs-actionbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 12px 0;
+}
+
+.gs-danger {
+	color: #b32d2e !important;
+	border-color: #b32d2e !important;
+}
+
+.gs-danger:hover {
+	background: #b32d2e !important;
+	color: #fff !important;
+}
+
+.gs-empty {
+	background: #fff;
+	border: 1px dashed #c3c4c7;
+	padding: 32px;
+	text-align: center;
+	margin-top: 16px;
+}
+
+.gs-list {
+	margin-left: 18px;
+	list-style: disc;
+}
+
+.gs-code {
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	padding: 10px 12px;
+	overflow-x: auto;
+	font-size: 12px;
+}
+
+.gs-log td {
+	font-size: 12px;
+}
+
+.gs-pager {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.gs-checks td {
+	font-size: 13px;
+}
+
+@media screen and (max-width: 782px) {
+	.gs-actions {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

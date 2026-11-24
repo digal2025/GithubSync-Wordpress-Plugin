@@ -1,0 +1,44 @@
+# Files excluded from the release archive built from this repository.
+# Used by `./build.sh` (see README → Development) and by wp-env / plugin-deploy tools.
+
+# Development tooling and metadata
+/.git
+/.github
+/.gitignore
+/.distignore
+/.editorconfig
+/build.sh
+# (build.sh is caught by the explicit entry above; it is not a *.sh-only rule,
+#  so shell scripts that are part of the plugin would still ship.)
+/tests
+/tests/**
+/phpunit.xml.dist
+/phpcs.xml.dist
+/phpstan.neon.dist
+/composer.json
+/composer.lock
+/vendor
+
+# Docs and changelog ship in the repository, not in the plugin zip
+/docs
+/docs/**
+/CHANGELOG.md
+*/docs
+*/docs/**
+
+# Build output
+/dist
+/dist/**
+*.zip
+
+# Local development leftovers
+.DS_Store
+*.log
+githubsync-secret.key
+*.key
+.env
+node_modules
+
+# Never ship the tests or the dev copy of includes/
+*/tests
+*/tests/**

@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    name: PHP ${{ matrix.php }} / WP ${{ matrix.wp }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.1', '8.3']
+        wp: ['6.2', 'latest']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, sodium, zip, curl, mbstring
+          coverage: none
+
+      - name: Lint every PHP file
+        run: |
+          find . -name '*.php' -not -path './vendor/*' -print0 \
+            | xargs -0 -n1 php -l
+
+      - name: Install WordPress
+        run: |
+          if [ "${{ matrix.wp }}" = "latest" ]; then
+            WP_VERSION="$(curl -sS https://api.wordpress.org/core/version-check/1.7/ | php -r 'echo json_decode(stream_get_contents(STDIN))->offers[0]->current;')"
+          else
+            WP_VERSION="${{ matrix.wp }}"
+          fi
+          curl -sSL "https://wordpress.org/wordpress-${WP_VERSION}.tar.gz" | tar xz
+          cp -r . wordpress/wp-content/plugins/githubsync
+
+      - name: Configure WordPress
+        working-directory: wordpress
+        run: |
+          cp wp-config-sample.php wp-config.php
+          sed -i "s/database_name_here/wordpress/;s/username_here/root/;s/password_here/root/;s/localhost/127.0.0.1/" wp-config.php
+          curl -sSL -o /tmp/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          php /tmp/wp-cli.phar core install \
+            --url=http://localhost --title=CI --admin_user=admin \
+            --admin_password=admin --admin_email=admin@example.com --skip-email
+          php /tmp/wp-cli.phar plugin activate githubsync
+
+      - name: Create an encryption key
+        # The security suite asserts the real key file: exists, 0600, outside
+        # ABSPATH. WordPress lives in wordpress/, so the default path is the
+        # parent directory of the workspace subfolder.
+        run: |
+          php -r 'file_put_contents($argv[1], base64_encode(random_bytes(32)) . "\n"); chmod($argv[1], 0600);' \
+            "${{ github.workspace }}/githubsync-secret.key"
+
+      - name: Build the release archive
+        run: ./build.sh
+
+      - name: Run the test suite
+        env:
+          GITHUBSYNC_WP_ROOT: ${{ github.workspace }}/wordpress
+          GITHUBSYNC_PLUGIN_DIR: ${{ github.workspace }}/wordpress/wp-content/plugins/githubsync
+        run: php tests/run-tests.php

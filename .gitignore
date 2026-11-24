@@ -1,0 +1,19 @@
+# Build output
+/dist/
+*.zip
+
+# Local tooling
+/vendor/
+/node_modules/
+phpunit.xml
+phpcs.xml
+phpstan.neon
+
+# Secrets and machine-specific files
+*.key
+.env
+.env.*
+.DS_Store
+*.log
+.idea/
+.vscode/
