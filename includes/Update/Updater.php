@@ -25,9 +25,11 @@ defined( 'ABSPATH' ) || exit;
  *    installed plugin folder before WordPress swaps it in.
  *
  * The package itself is downloaded by WordPress with no credentials, so the
- * `download_url` must be reachable anonymously. The release workflow uploads a
- * copy of `githubsync.zip` to the `latest-updates` tag in the public
- * "releases" repository and points the manifest at that asset.
+ * `download_url` must be reachable anonymously. Because the source repository
+ * is private, the release workflow publishes `githubsync.zip` and
+ * `update.json` to a separate public repository (see docs/SELF-UPDATE.md) and
+ * the manifest's `sha256` is checked against the downloaded package before it
+ * is installed.
  *
  * Everything is fail-open: any problem leaves WordPress's normal behaviour
  * (and the manual "Upload Plugin" screen) intact.
@@ -45,8 +47,10 @@ final class Updater {
 	public const URL_OPTION = 'githubsync_update_url';
 
 	/**
-	 * Manifest schema we understand.
+	 * Where the plugin's source lives, for links in wp-admin.
 	 */
+	public const SOURCE_URL = 'https://github.com/digal2025/GithubSync-Wordpress-Plugin';
+
 	/**
 	 * How long a fetched manifest is reused (seconds).
 	 */
@@ -76,6 +80,7 @@ final class Updater {
 		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'filter_update_transient' ) );
 		add_filter( 'plugins_api', array( __CLASS__, 'filter_plugin_information' ), 20, 3 );
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'filter_source_selection' ), 20, 4 );
+		add_filter( 'upgrader_pre_download', array( __CLASS__, 'filter_verify_download' ), 20, 4 );
 		add_filter( 'plugin_action_links_' . plugin_basename( GITHUBSYNC_FILE ), array( __CLASS__, 'action_links' ) );
 
 		add_action( self::CHECK_HOOK, array( __CLASS__, 'run_scheduled_check' ) );
@@ -238,6 +243,7 @@ final class Updater {
 		}
 
 		// GitHub reports "sha256:<hex>"; a bare 64-character digest is also fine.
+		// The digest is enforced when the package is downloaded, not just here.
 		$sha = preg_replace( '/^sha256:/i', '', trim( $data['sha256'] ) );
 
 		if ( ! is_string( $sha ) || ! preg_match( '/^[a-f0-9]{64}$/i', $sha ) ) {
@@ -254,6 +260,7 @@ final class Updater {
 			'requires'     => isset( $data['requires'] ) ? (string) $data['requires'] : '',
 			'tested'       => isset( $data['tested'] ) ? (string) $data['tested'] : '',
 			'homepage'     => isset( $data['homepage'] ) ? (string) $data['homepage'] : '',
+			'source'       => isset( $data['source'] ) ? (string) $data['source'] : '',
 			'changelog'    => isset( $data['changelog'] ) ? (string) $data['changelog'] : '',
 			'notes'        => isset( $data['notes'] ) ? (string) $data['notes'] : '',
 			'released_at'  => isset( $data['released_at'] ) ? (string) $data['released_at'] : '',
@@ -279,6 +286,29 @@ final class Updater {
 			if ( is_array( $cached ) && isset( $cached['version'] ) ) {
 				return $cached;
 			}
+		}
+
+		$manifest = self::fetch_manifest();
+
+		if ( is_wp_error( $manifest ) ) {
+			return $manifest;
+		}
+
+		set_transient( self::cache_key(), $manifest, self::CACHE_TTL );
+
+		return $manifest;
+	}
+
+	/**
+	 * Download and validate the manifest, ignoring the cache.
+	 *
+	 * @return array|\WP_Error
+	 */
+	private static function fetch_manifest() {
+		$url = self::manifest_url();
+
+		if ( '' === $url ) {
+			return new \WP_Error( ErrorCodes::UPDATE_NOT_CONFIGURED, __( 'No update manifest URL is configured.', 'githubsync' ) );
 		}
 
 		$response = wp_remote_get(
@@ -318,15 +348,7 @@ final class Updater {
 			return new \WP_Error( ErrorCodes::UPDATE_MANIFEST_INVALID, __( 'The update manifest is not valid JSON.', 'githubsync' ) );
 		}
 
-		$manifest = self::validate_manifest( $decoded );
-
-		if ( is_wp_error( $manifest ) ) {
-			return $manifest;
-		}
-
-		set_transient( self::cache_key(), $manifest, self::CACHE_TTL );
-
-		return $manifest;
+		return self::validate_manifest( $decoded );
 	}
 
 	/**
@@ -377,7 +399,7 @@ final class Updater {
 			'slug'          => 'githubsync',
 			'plugin'        => plugin_basename( GITHUBSYNC_FILE ),
 			'new_version'   => $release['version'],
-			'url'           => '' !== $release['homepage'] ? $release['homepage'] : 'https://github.com/digal2025/GithubSync-Wordpress-Plugin',
+			'url'           => '' !== $release['homepage'] ? $release['homepage'] : self::SOURCE_URL,
 			'package'       => $release['download_url'],
 			'icons'         => array(),
 			'banners'       => array(),
@@ -453,7 +475,7 @@ final class Updater {
 			'slug'          => 'githubsync',
 			'version'       => $release['version'],
 			'author'        => '<a href="https://github.com/digal2025">digal2025</a>',
-			'homepage'      => 'https://github.com/digal2025/GithubSync-Wordpress-Plugin',
+			'homepage'      => '' !== $release['homepage'] ? $release['homepage'] : self::SOURCE_URL,
 			'download_link' => $release['download_url'],
 			'requires'      => $release['requires'],
 			'tested'        => $release['tested'],
@@ -473,6 +495,126 @@ final class Updater {
 	 */
 	private static function changelog_html( $markdown ) {
 		return wpautop( wp_kses_post( $markdown ) );
+	}
+
+	/**
+	 * Refuse to install a package whose contents do not match the manifest.
+	 *
+	 * WordPress downloads a plugin package over the network without checking
+	 * it is the file we advertised, so this compares the downloaded zip's
+	 * SHA-256 with the digest in the signed-off manifest and deletes the file
+	 * on a mismatch. Only packages from our own manifest URL are checked.
+	 *
+	 * @param bool|string|\WP_Error $reply      Existing reply (false = download).
+	 * @param string                $package    Package URL.
+	 * @param \WP_Upgrader          $upgrader   Upgrader instance.
+	 * @param array                 $hook_extra Extra arguments.
+	 * @return bool|string|\WP_Error
+	 */
+	public static function filter_verify_download( $reply, $package, $upgrader = null, $hook_extra = array() ) {
+		if ( false !== $reply || ! is_string( $package ) || '' === $package || ! self::enabled() ) {
+			return $reply;
+		}
+
+		$is_ours = is_array( $hook_extra )
+			&& isset( $hook_extra['plugin'] )
+			&& plugin_basename( GITHUBSYNC_FILE ) === $hook_extra['plugin'];
+
+		if ( ! $is_ours ) {
+			return $reply;
+		}
+
+		// A manifest that cannot be downloaded (flaky network, GitHub hiccup)
+		// must not be able to block an update WordPress is ready to install, so
+		// the check is skipped; a manifest that *does* load but disagrees with
+		// the package is a hard failure below.
+		$release = self::fetch_manifest();
+
+		if ( is_wp_error( $release ) ) {
+			self::record_error( $release );
+
+			return $reply;
+		}
+
+		if ( untrailingslashit( $package ) !== untrailingslashit( $release['download_url'] ) ) {
+			return $reply;
+		}
+
+		$file = self::download_package( $package );
+
+		if ( is_wp_error( $file ) ) {
+			return $file;
+		}
+
+		clearstatcache( true, $file );
+		$actual = hash_file( 'sha256', $file );
+
+		if ( ! is_string( $actual ) || ! hash_equals( $release['sha256'], strtolower( $actual ) ) ) {
+			if ( function_exists( 'wp_delete_file' ) ) {
+				wp_delete_file( $file );
+			}
+
+			return new \WP_Error( ErrorCodes::UPDATE_PACKAGE_INVALID, __( 'The downloaded GitHubSync package does not match the published checksum. The update was not installed.', 'githubsync' ) );
+		}
+
+		return $file;
+	}
+
+	/**
+	 * Download a package into WordPress's temporary directory.
+	 *
+	 * @param string $url Package URL.
+	 * @return string|\WP_Error Path to the downloaded file.
+	 */
+	private static function download_package( $url ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
+		$temp = function_exists( 'get_temp_dir' ) ? get_temp_dir() : sys_get_temp_dir();
+		$file = wp_tempnam( 'githubsync-update-' . wp_generate_password( 8, false ) . '.zip', $temp );
+
+		if ( ! $file ) {
+			return new \WP_Error( ErrorCodes::UPDATE_PACKAGE_INVALID, __( 'Could not create a temporary file for the update package.', 'githubsync' ) );
+		}
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'     => 120,
+				'redirection' => 5,
+				'stream'      => true,
+				'filename'    => $file,
+				'headers'     => array(
+					'User-Agent' => 'GitHubSync/' . GITHUBSYNC_VERSION,
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			if ( function_exists( 'wp_delete_file' ) ) {
+				wp_delete_file( $file );
+			}
+
+			return new \WP_Error( ErrorCodes::GITHUB_NETWORK_ERROR, $response->get_error_message() );
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( 200 !== $status ) {
+			if ( function_exists( 'wp_delete_file' ) ) {
+				wp_delete_file( $file );
+			}
+
+			return new \WP_Error(
+				ErrorCodes::UPDATE_PACKAGE_INVALID,
+				sprintf(
+					/* translators: %d: HTTP status code. */
+					__( 'The update package could not be downloaded (HTTP %d).', 'githubsync' ),
+					$status
+				)
+			);
+		}
+
+		return $file;
 	}
 
 	/**

@@ -25,8 +25,9 @@ All notable changes to GitHubSync are recorded here. The format follows
   `wp-config.php`. The release feed URL can be set with the
   `GITHUBSYNC_UPDATE_URL` constant, which wins over the stored setting.
 - A `v*` tag now publishes the release in CI: the suite must pass, then
-  `githubsync.zip` and `update.json` are attached to the release and checked to
-  be publicly downloadable. See [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md).
+  `githubsync.zip` and `update.json` are attached to the release in the public
+  download repository `digal2025/githubsync-releases` and checked to be
+  publicly downloadable. See [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md).
 
 ### Notes
 

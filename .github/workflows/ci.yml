@@ -7,6 +7,9 @@ on:
     # "release" job at the bottom of this file).
     tags: ['v*']
   pull_request:
+  # Lets a maintainer re-run the release job for an existing tag from the
+  # Actions tab (tag pushes alone are not always delivered).
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -51,8 +54,12 @@ jobs:
           else
             WP_VERSION="${{ matrix.wp }}"
           fi
+          # WordPress unpacks to ./wordpress. The workspace itself is the plugin,
+          # so it is copied in afterwards (never as part of the unpack: copying
+          # "." into a subdirectory of itself recurses forever).
           curl -sSL "https://wordpress.org/wordpress-${WP_VERSION}.tar.gz" | tar xz
-          cp -r . wordpress/wp-content/plugins/githubsync
+          mkdir -p wordpress/wp-content/plugins
+          rsync -a --exclude .git --exclude wordpress ./ wordpress/wp-content/plugins/githubsync/
 
       - name: Configure WordPress
         working-directory: wordpress
@@ -84,30 +91,43 @@ jobs:
 
   # Publishing a release is what makes self-updates possible.
   #
-  # WordPress downloads plugin packages with no credentials at all, so a private
-  # repository's release assets cannot be used as-is. This job therefore:
+  # WordPress downloads plugin packages with no credentials at all, so release
+  # assets in this (private) repository cannot be used. This job therefore
+  # publishes the download artefacts to a separate PUBLIC repository:
   #
-  #   1. builds githubsync.zip from the tagged commit;
-  #   2. creates (or updates) the GitHub release for the tag and attaches the zip;
-  #   3. writes update.json — the manifest GitHubSync reads — as the release asset
-  #      update.json, pointing at that same public zip and carrying its SHA-256.
+  #   1. build githubsync.zip from the tagged commit;
+  #   2. create (or update) the GitHub release for the tag there and attach it;
+  #   3. write update.json — the manifest GitHubSync reads — pointing at that
+  #      same public zip and carrying its SHA-256.
   #
   # The manifest URL to paste into GitHubSync → Settings → Plugin updates is:
   #
-  #   https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json
+  #   https://github.com/RELEASES_REPO/releases/latest/download/update.json
   #
-  # which always resolves to the most recent release. Re-run this job (or publish
-  # a new tag) whenever a release needs rebuilding.
+  # which always resolves to the most recent release. RELEASES_REPO and the
+  # token that can write to it are set at the top of the job below.
   release:
     name: Publish release and update manifest
     needs: lint-and-test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+    env:
+      # Public download host (see docs/SELF-UPDATE.md).
+      RELEASES_REPO: digal2025/githubsync-releases
+      RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the release token is configured
+        run: |
+          if [ -z "$RELEASES_TOKEN" ]; then
+            echo "The RELEASES_TOKEN secret is not set; it must be a token with" >&2
+            echo "write access to ${RELEASES_REPO}." >&2
+            exit 1
+          fi
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -127,54 +147,77 @@ jobs:
             exit 1
           fi
 
-      - name: Write the update manifest
+      - name: Publish to the public releases repository
         env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: php .github/scripts/write-manifest.php dist/githubsync.zip dist/update.json
-
-      - name: Create or update the release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ env.RELEASES_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           TAG="$GITHUB_REF_NAME"
-          # Inline notes come from the matching "## [x.y.z]" block of the changelog.
+          # Inline notes come from the matching "## [x.y.z]" block of the changelog,
+          # with a link back to the source tag it was cut from.
           BODY_FILE="$(mktemp)"
           awk -v v="${TAG#v}" '
             index($0, "## [" v "]") == 1 { on = 1; next }
             on && index($0, "## [") == 1 { exit }
             on { print }
           ' CHANGELOG.md > "$BODY_FILE"
+          printf '\nSource: %s/tree/%s\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY_SOURCE" "$TAG" >> "$BODY_FILE"
 
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file "$BODY_FILE" --draft=false
+          if gh release view "$TAG" --repo "$RELEASES_REPO" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$RELEASES_REPO" --notes-file "$BODY_FILE" --draft=false
           else
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+            gh release create "$TAG" --repo "$RELEASES_REPO" \
               --title "GitHubSync ${TAG#v}" --notes-file "$BODY_FILE"
           fi
 
-          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
-            dist/githubsync.zip dist/update.json
+          gh release upload "$TAG" --repo "$RELEASES_REPO" --clobber \
+            dist/githubsync.zip
+
+          # GitHub reports the asset digest ("sha256:<hex>") once it is stored.
+          SHA="$(gh release view "$TAG" --repo "$RELEASES_REPO" \
+            --json assets --jq '.assets[] | select(.name == "githubsync.zip") | .digest')"
+          if [ -z "$SHA" ] || [ "$SHA" = "null" ]; then
+            SHA="sha256:$(shasum -a 256 dist/githubsync.zip | awk '{print $1}')"
+          fi
+          printf '%s\n' "$SHA" > dist/sha256.txt
+
+          GITHUB_REPOSITORY="$RELEASES_REPO" \
+          GITHUB_SERVER_URL="$GITHUB_SERVER_URL" \
+          GITHUBSYNC_SHA256="$SHA" \
+          GITHUBSYNC_SOURCE_REPO="$GITHUB_REPOSITORY_SOURCE" \
+          GITHUBSYNC_SOURCE_TAG="$TAG" \
+            php .github/scripts/write-manifest.php dist/githubsync.zip dist/update.json
+
+          gh release upload "$TAG" --repo "$RELEASES_REPO" --clobber dist/update.json
 
       - name: Verify the manifest is publicly readable
         run: |
-          URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/update.json"
+          # Deliberately no credentials: this is exactly how WordPress fetches.
+          MANIFEST="https://github.com/${RELEASES_REPO}/releases/latest/download/update.json"
+          ZIP="https://github.com/${RELEASES_REPO}/releases/latest/download/githubsync.zip"
+
           for attempt in 1 2 3 4 5; do
-            STATUS="$(curl -sS -o /tmp/update.json -w '%{http_code}' -L "$URL" || true)"
+            STATUS="$(curl -sS -o /tmp/update.json -w '%{http_code}' -L "$MANIFEST" || true)"
             [ "$STATUS" = "200" ] && break
-            echo "Attempt ${attempt}: HTTP ${STATUS}; retrying…"
+            echo "Attempt ${attempt}: manifest HTTP ${STATUS}; retrying…"
             sleep 10
           done
           if [ "$STATUS" != "200" ]; then
             echo "The manifest is not reachable anonymously (HTTP ${STATUS})." >&2
-            echo "Self-updates need the release assets to be public." >&2
             exit 1
           fi
           cat /tmp/update.json
-          ZIP_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/githubsync.zip")"
+
+          ZIP_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "$ZIP")"
           if [ "$ZIP_STATUS" != "200" ] && [ "$ZIP_STATUS" != "206" ]; then
             echo "The release zip is not reachable anonymously (HTTP ${ZIP_STATUS})." >&2
             exit 1
           fi
+
+          # The manifest must point at the assets we just verified.
+          php -r '
+            $m = json_decode(file_get_contents("/tmp/update.json"), true);
+            $ok = is_array($m) && ($m["download_url"] ?? "") === $argv[1];
+            if (!$ok) { fwrite(STDERR, "Manifest download_url does not match the verified zip.\n"); exit(1); }
+            echo "Manifest points at the verified zip.\n";
+          ' "$ZIP"

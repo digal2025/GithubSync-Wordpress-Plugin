@@ -14,6 +14,7 @@ itself on the standard core filters, so nothing beside WordPress is involved:
 | `pre_set_site_transient_update_plugins` | The new version on the Plugins screen and on Dashboard → Updates. |
 | `plugins_api` (`plugin_information`) | The "View version details" dialog, including the release notes. |
 | `upgrader_source_selection` | Renames the extracted folder to `githubsync` so the swap works. |
+| `upgrader_pre_download` | Checks the downloaded zip against the manifest's `sha256` before WordPress installs it. |
 
 Three more pieces support this:
 
@@ -35,14 +36,21 @@ repository is private, so its release assets cannot be fetched anonymously and
 cannot be used as `download_url` directly. Release assets on *public* GitHub
 releases can.
 
+GitHubSync therefore uses a **second, public repository** as its download host:
+[`digal2025/githubsync-releases`](https://github.com/digal2025/githubsync-releases).
+It holds nothing but release artifacts — `githubsync.zip` and `update.json` for
+each version. The source stays private in
+`digal2025/GithubSync-Wordpress-Plugin`.
+
 The release workflow (`.github/workflows/ci.yml`, job `release`) therefore, for
 every `v*` tag:
 
 1. runs the test suite first (`needs: lint-and-test`);
 2. builds `githubsync.zip` with `./build.sh`;
-3. creates or updates the GitHub release for the tag and attaches the zip;
-4. writes `update.json` (`.github/scripts/write-manifest.php`) and attaches it to
-   the same release;
+3. creates or updates the release for the tag **in the public repository** and
+   attaches the zip (using the `RELEASES_TOKEN` secret, see below);
+4. writes `update.json` (`.github/scripts/write-manifest.php`) pointing at that
+   public zip and attaches it to the same release;
 5. verifies both are reachable **without** authentication and fails the job if
    they are not.
 
@@ -50,7 +58,7 @@ The manifest URL is stable across releases, because `releases/latest` always
 resolves to the most recent published release:
 
 ```
-https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json
+https://github.com/digal2025/githubsync-releases/releases/latest/download/update.json
 ```
 
 > **The release must be published, not left as a draft.** A draft release's
@@ -65,11 +73,12 @@ required.
 {
   "slug": "githubsync",
   "version": "0.1.9",
-  "download_url": "https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/download/v0.1.9/githubsync.zip",
+  "download_url": "https://github.com/digal2025/githubsync-releases/releases/download/v0.1.9/githubsync.zip",
   "sha256": "sha256:0123…(64 hex characters)",
   "requires": "7.4",
   "tested": "6.8",
   "homepage": "https://github.com/digal2025/GithubSync-Wordpress-Plugin",
+  "source": "https://github.com/digal2025/GithubSync-Wordpress-Plugin/tree/v0.1.9",
   "released_at": "2026-12-01",
   "changelog": "### Added\n\n- …"
 }
@@ -81,9 +90,19 @@ shows no update):
 - `version` must be numeric (`1.4.0`, `v1.4.0`, `1.4.0-beta.1`);
 - `download_url` must be `https://` on `github.com`,
   `objects.githubusercontent.com` or `release-assets.githubusercontent.com`;
-- `sha256` must be 64 hex characters, with or without the `sha256:` prefix;
+- `sha256` must be 64 hex characters, with or without the `sha256:` prefix, and
+  must match the downloaded package or the install is refused;
 - optional: `changelog` (markdown, shown in the details dialog), `notes`,
-  `requires` (PHP), `tested` (WordPress), `homepage`, `released_at`, `slug`.
+  `requires` (PHP), `tested` (WordPress), `homepage`, `source`, `released_at`,
+  `slug`.
+
+### One-time CI setup
+
+The `release` job needs a token that may write to the public repository. Create
+a fine-grained personal access token limited to
+`digal2025/githubsync-releases` with **Contents: Read and write**, then add it to
+the private repository as the secret **`RELEASES_TOKEN`** (Settings → Secrets and
+variables → Actions). The job fails with a clear message when it is missing.
 
 ## Configuring a site
 
@@ -91,7 +110,7 @@ shows no update):
 2. Paste the manifest URL into *Release feed* (or set it in `wp-config.php`):
 
    ```php
-   define( 'GITHUBSYNC_UPDATE_URL', 'https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json' );
+   define( 'GITHUBSYNC_UPDATE_URL', 'https://github.com/digal2025/githubsync-releases/releases/latest/download/update.json' );
    ```
 
    The constant wins over the stored option, which makes the feed easy to lock
@@ -128,8 +147,19 @@ Plugin**. WordPress's own upload path is unaffected by any of this.
    git push origin v0.1.9
    ```
 
-4. Watch the `release` job. It fails loudly if the tag and the plugin version
-   disagree, or if either asset is not publicly downloadable.
+4. Watch the `release` job. It fails loudly if the token is missing, if the tag
+   and the plugin version disagree, or if either asset is not publicly
+   downloadable.
+
+Pushing a tag does not always start the workflow on GitHub. If no run appears,
+open **Actions → CI → Run workflow** on `main`. That only runs the tests (the
+release step requires a pushed `v*` tag); to publish for a tag that already
+exists, delete and re-push it:
+
+```bash
+git push origin :v0.1.9
+git push origin v0.1.9
+```
 
 ## Troubleshooting
 

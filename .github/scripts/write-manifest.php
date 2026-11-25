@@ -9,8 +9,12 @@
  * Updater::validate_manifest() understands.
  *
  * Reads from the environment:
- *   GITHUB_REPOSITORY  owner/name (set by Actions)
- *   GITHUB_REF_NAME    tag name, e.g. v0.1.9
+ *   GITHUB_REPOSITORY     owner/name of the PUBLIC host (e.g. owner/githubsync-releases)
+ *   GITHUB_REF_NAME       tag name, e.g. v0.1.9
+ *   GITHUBSYNC_SHA256     optional "sha256:<hex>" digest GitHub reported for the
+ *                         uploaded asset; the local file is hashed otherwise
+ *   GITHUBSYNC_SOURCE_REPO optional owner/name of the private source repository
+ *   GITHUBSYNC_SOURCE_TAG  optional source tag (defaults to GITHUB_REF_NAME)
  *
  * @package GitHubSync
  */
@@ -48,10 +52,32 @@ if ( '' === $version || $version !== ltrim( $tag, 'v' ) ) {
 	exit( 1 );
 }
 
-$sha = hash_file( 'sha256', $zip );
+$source_repo = (string) getenv( 'GITHUBSYNC_SOURCE_REPO' );
+$source_tag  = (string) getenv( 'GITHUBSYNC_SOURCE_TAG' );
 
-if ( ! is_string( $sha ) ) {
+if ( '' === $source_tag ) {
+	$source_tag = $tag;
+}
+
+$homepage = '' !== $source_repo ? sprintf( 'https://github.com/%s', $source_repo ) : sprintf( 'https://github.com/%s', $repo );
+
+$sha = trim( (string) getenv( 'GITHUBSYNC_SHA256' ) );
+
+if ( '' === $sha ) {
+	$sha = hash_file( 'sha256', $zip );
+}
+
+if ( ! is_string( $sha ) || '' === $sha ) {
 	fwrite( STDERR, "Could not hash {$zip}\n" );
+	exit( 1 );
+}
+
+if ( 0 === stripos( $sha, 'sha256:' ) ) {
+	$sha = substr( $sha, 7 );
+}
+
+if ( ! preg_match( '/^[a-f0-9]{64}$/i', $sha ) ) {
+	fwrite( STDERR, "Invalid SHA-256 digest: {$sha}\n" );
 	exit( 1 );
 }
 
@@ -62,7 +88,8 @@ $manifest = array(
 	'sha256'       => 'sha256:' . $sha,
 	'requires'     => '7.4',
 	'tested'       => '6.8',
-	'homepage'     => sprintf( 'https://github.com/%s', $repo ),
+	'homepage'     => $homepage,
+	'source'       => '' !== $source_repo ? sprintf( 'https://github.com/%s/tree/%s', $source_repo, $source_tag ) : '',
 	'released_at'  => gmdate( 'Y-m-d' ),
 	'changelog'    => changelog_for( $version ),
 );

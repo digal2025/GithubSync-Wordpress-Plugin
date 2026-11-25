@@ -405,17 +405,22 @@ The `release` job in `.github/workflows/ci.yml` then:
 1. reruns the suite (`needs: lint-and-test`), so a red build never ships;
 2. fails if the tag and the `githubsync.php` version disagree;
 3. builds `githubsync.zip` with `./build.sh`;
-4. creates the GitHub release for the tag, with the matching `CHANGELOG.md`
-   section as its notes;
+4. creates the release for the tag in the public download repository
+   [`digal2025/githubsync-releases`](https://github.com/digal2025/githubsync-releases),
+   with the matching `CHANGELOG.md` section as its notes (the private source
+   repository's assets cannot be downloaded anonymously, so they are not used);
 5. attaches `githubsync.zip` and `update.json` (the self-update manifest,
    written by `.github/scripts/write-manifest.php` with the zip's SHA-256);
 6. checks both are downloadable **without authentication** and fails if not.
+
+The job needs the repository secret `RELEASES_TOKEN`: a fine-grained token for
+`digal2025/githubsync-releases` with *Contents: Read and write*.
 
 Do not create the release by hand as a draft: draft assets are private and
 `releases/latest` skips drafts, so self-updates would not see it.
 
 Sites pick the release up through the manifest at
-`https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json`.
+`https://github.com/digal2025/githubsync-releases/releases/latest/download/update.json`.
 See [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md) for how the updater works, the
 manifest format, the `GITHUBSYNC_UPDATE_URL` / `GITHUBSYNC_DISABLE_SELF_UPDATE`
 constants and the manual fallback:
