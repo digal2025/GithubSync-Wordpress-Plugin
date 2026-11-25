@@ -41,7 +41,7 @@ $data = array(
 CaseRunner::case( 'the new deployment form explains how to fill it in' );
 $html = $render( $data );
 
-Assert::true( false !== strpos( $html, 'How to fill this in' ), 'the form opens with the how-to block' );
+Assert::true( false !== strpos( $html, 'Filling this in' ), 'the form opens with the how-to block' );
 Assert::same( 1, substr_count( $html, 'gs-card' ), 'the how-to block is a single card' );
 
 CaseRunner::case( 'every text field carries a concrete hint' );
@@ -88,6 +88,6 @@ $edit['row'] = array(
 
 $edit_html = $render( $edit );
 
-Assert::false( false !== strpos( $edit_html, 'How to fill this in' ), 'editing an existing deployment skips the how-to' );
+Assert::false( false !== strpos( $edit_html, 'Filling this in' ), 'editing an existing deployment skips the how-to' );
 Assert::true( false !== strpos( $edit_html, 'octocat/hello-world' ), 'the saved repository is filled in' );
 Assert::true( false !== strpos( $edit_html, 'Edit Deployment' ), 'the heading switches to edit' );

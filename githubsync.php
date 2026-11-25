@@ -3,7 +3,7 @@
  * Plugin Name:       GitHubSync
  * Plugin URI:        https://example.com/githubsync
  * Description:       Safely deploy selected files from one or more GitHub repositories to configured WordPress directories whenever a branch is pushed.
- * Version:           0.1.8
+ * Version:           0.1.9
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            GitHubSync
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GITHUBSYNC_VERSION', '0.1.8' );
+define( 'GITHUBSYNC_VERSION', '0.1.9' );
 define( 'GITHUBSYNC_FILE', __FILE__ );
 define( 'GITHUBSYNC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GITHUBSYNC_URL', plugin_dir_url( __FILE__ ) );

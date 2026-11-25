@@ -104,7 +104,64 @@ $gs_settings = $data['settings'];
 			</tr>
 		</table>
 
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Self-updates', 'githubsync' ); ?></th>
+				<td>
+					<label>
+						<input type="checkbox" name="githubsync[self_update_enabled]" value="1" <?php checked( (int) $gs_settings['self_update_enabled'], 1 ); ?> <?php disabled( $data['update_locked'] ); ?>>
+						<?php esc_html_e( 'Let WordPress offer new GitHubSync releases on Dashboard → Updates and the Plugins screen', 'githubsync' ); ?>
+					</label>
+					<p class="description"><?php esc_html_e( 'Every release is checked against a SHA-256 digest before WordPress installs it.', 'githubsync' ); ?></p>
+				</td>
+			</tr>
+		</table>
+
 		<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save settings', 'githubsync' ); ?></button></p>
 	</form>
+	</div>
+
+	<div class="gs-card gs-settings">
+		<h2><?php esc_html_e( 'Plugin updates', 'githubsync' ); ?></h2>
+
+		<p class="gs-muted"><?php echo esc_html( $data['update_status'] ); ?></p>
+		<p class="gs-muted">
+			<?php
+			printf(
+				/* translators: %s: installed version. */
+				esc_html__( 'Installed version: %s', 'githubsync' ),
+				'<code>' . esc_html( GITHUBSYNC_VERSION ) . '</code>'
+			);
+			?>
+		</p>
+
+		<?php if ( $data['update_on'] ) : ?>
+			<p class="gs-actions">
+				<a class="button button-primary" href="<?php echo esc_url( admin_url( 'update-core.php' ) ); ?>"><?php esc_html_e( 'Go to Dashboard → Updates', 'githubsync' ); ?></a>
+			</p>
+		<?php endif; ?>
+
+		<?php if ( '' !== $data['update_url'] ) : ?>
+			<p class="gs-muted">
+				<?php
+				printf(
+					/* translators: %s: manifest URL. */
+					esc_html__( 'Release feed: %s', 'githubsync' ),
+					'<code>' . esc_html( $data['update_url'] ) . '</code>'
+				);
+				?>
+			</p>
+		<?php endif; ?>
+
+		<?php if ( ! $data['update_locked'] ) : ?>
+			<div class="gs-actionbar">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
+					<?php wp_nonce_field( 'githubsync_check_update' ); ?>
+					<input type="hidden" name="action" value="githubsync_check_update">
+					<button type="submit" class="button"><?php esc_html_e( 'Check for updates now', 'githubsync' ); ?></button>
+				</form>
+			</div>
+			<p class="description"><?php esc_html_e( 'If a newer release is found it appears under Dashboard → Updates. You can also install a release zip with Plugins → Add New → Upload Plugin.', 'githubsync' ); ?></p>
+		<?php endif; ?>
 	</div>
 </div>

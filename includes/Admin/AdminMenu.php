@@ -113,6 +113,9 @@ final class AdminMenu {
 			'checklist_closed'     => __( 'Setup checklist closed. You can show it again at any time from the dashboard.', 'githubsync' ),
 			'checklist_incomplete' => __( 'The setup checklist cannot be closed until every step is complete.', 'githubsync' ),
 			'checklist_restored'   => __( 'Setup checklist reopened.', 'githubsync' ),
+			'update_current'       => __( 'Update check finished: GitHubSync is up to date.', 'githubsync' ),
+			'update_available'     => __( 'Update check finished: a newer GitHubSync release is available. Update it from Dashboard → Updates.', 'githubsync' ),
+			'update_disabled'      => __( 'Self-updates are switched off, so no check was made.', 'githubsync' ),
 			'error'                => __( 'The action could not be completed.', 'githubsync' ),
 		);
 

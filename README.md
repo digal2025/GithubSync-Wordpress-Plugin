@@ -366,6 +366,7 @@ constant) after uninstalling.
 - [`docs/WEBHOOK-SETUP.md`](docs/WEBHOOK-SETUP.md) — exact webhook steps.
 - [`docs/DEPLOYMENT-RECOVERY.md`](docs/DEPLOYMENT-RECOVERY.md) — backups, rollback, manual recovery.
 - [`docs/TESTING.md`](docs/TESTING.md) — local test environment and commands.
+- [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md) — self-updates, the release manifest and publishing.
 - [`docs/SPEC-COVERAGE.md`](docs/SPEC-COVERAGE.md) — feature-by-feature audit against the specification.
 
 ## Development
@@ -389,35 +390,40 @@ plugin while honouring `.distignore` (no tests, docs, or key files), and writes
 The repository root *is* the plugin folder, so the same tree that CI installs
 into `wp-content/plugins/githubsync` is the tree you zip.
 
+Bump the version in **three** places so they cannot drift: `githubsync.php`
+(`Version:` and `GITHUBSYNC_VERSION`), `readme.txt` (`Stable tag:`), and a new
+`## [x.y.z] - YYYY-MM-DD` section in `CHANGELOG.md`. Commit, push `main` and wait
+for CI. Then tag the same commit and push the tag:
+
 ```bash
-# 1. From a clean checkout of the default branch
-git status                     # must be clean
-
-# 2. Build and smoke-test the archive
-./build.sh                     # writes dist/githubsync.zip
-unzip -l dist/githubsync.zip | grep -E 'tests/|docs/|\.key' && echo 'LEAK' || echo 'archive clean'
-
-# 3. Tag and push
-git tag -a v0.1.0 -m "GitHubSync 0.1.0"
-git push origin main
-git push origin v0.1.0
+git tag -a v0.1.9 -m "GitHubSync 0.1.9"
+git push origin v0.1.9
 ```
 
-Then on GitHub: **Releases → Draft a new release**, choose tag `v0.1.0`, title
-`GitHubSync 0.1.0`, paste the matching `CHANGELOG.md` section, and attach
-`dist/githubsync.zip` as the release asset. Publish.
+The `release` job in `.github/workflows/ci.yml` then:
 
-Installing the asset:
+1. reruns the suite (`needs: lint-and-test`), so a red build never ships;
+2. fails if the tag and the `githubsync.php` version disagree;
+3. builds `githubsync.zip` with `./build.sh`;
+4. creates the GitHub release for the tag, with the matching `CHANGELOG.md`
+   section as its notes;
+5. attaches `githubsync.zip` and `update.json` (the self-update manifest,
+   written by `.github/scripts/write-manifest.php` with the zip's SHA-256);
+6. checks both are downloadable **without authentication** and fails if not.
+
+Do not create the release by hand as a draft: draft assets are private and
+`releases/latest` skips drafts, so self-updates would not see it.
+
+Sites pick the release up through the manifest at
+`https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json`.
+See [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md) for how the updater works, the
+manifest format, the `GITHUBSYNC_UPDATE_URL` / `GITHUBSYNC_DISABLE_SELF_UPDATE`
+constants and the manual fallback:
 
 ```bash
-wp plugin install /path/to/githubsync.zip --activate
+wp plugin install /path/to/githubsync.zip --force
 # or: upload the zip from Plugins → Add New → Upload Plugin
 ```
-
-Bump the version in **three** places before tagging so they cannot drift:
-`githubsync.php` (`Version:`), `readme.txt` (`Stable tag:`), and a new
-`CHANGELOG.md` section. `./build.sh 0.2.0` refuses to run if its argument and
-the `githubsync.php` header disagree.
 
 ## License
 

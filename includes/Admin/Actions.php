@@ -23,6 +23,7 @@ use GitHubSync\Security\CredentialVault;
 use GitHubSync\Security\InputValidator;
 use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
+use GitHubSync\Update\Updater;
 use GitHubSync\Webhooks\SignatureVerifier;
 
 defined( 'ABSPATH' ) || exit;
@@ -62,6 +63,7 @@ final class Actions {
 			'githubsync_prune_backups',
 			'githubsync_dismiss_checklist',
 			'githubsync_restore_checklist',
+			'githubsync_check_update',
 		);
 
 		foreach ( $actions as $action ) {
@@ -146,9 +148,43 @@ final class Actions {
 			case 'githubsync_restore_checklist':
 				self::restore_checklist();
 				break;
+			case 'githubsync_check_update':
+				self::check_update();
+				break;
 			default:
 				self::back( 'githubsync', 'error' );
 		}
+	}
+
+	/**
+	 * Fetch the release feed now and refresh the WordPress update list.
+	 *
+	 * @return void
+	 */
+	private static function check_update() {
+		self::verify( 'githubsync_check_update' );
+
+		if ( ! Updater::enabled() ) {
+			self::back( 'githubsync-settings', 'update_disabled', 'warning' );
+		}
+
+		Updater::flush_cache();
+
+		$release = Updater::get_release( true );
+
+		if ( is_wp_error( $release ) ) {
+			Updater::record_error( $release );
+			self::back_message( 'githubsync-settings', $release->get_error_message() );
+		}
+
+		Updater::record_release( $release );
+		Updater::request_check( false );
+
+		if ( Updater::is_newer( $release['version'] ) ) {
+			self::back( 'githubsync-settings', 'update_available', 'warning' );
+		}
+
+		self::back( 'githubsync-settings', 'update_current' );
 	}
 
 	/**

@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.1.2
+Stable tag: 0.1.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,8 @@ Features:
 * Action Scheduler support when available; WP-Cron otherwise, with a recovery
   tick so missed events do not strand a job.
 * Server-rendered admin screens; no JavaScript build step.
+* Self-updates from GitHub releases, offered on Dashboard → Updates like any
+  other plugin, with every package verified against a SHA-256 digest.
 
 == Installation ==
 
@@ -88,6 +90,14 @@ disabled, whether an encryption key and GitHub connection exist, and the last
 webhook deliveries. If `DISABLE_WP_CRON` is set, call `wp-cron.php` from a real
 system cron or use *Run queue now*.
 
+= How do I update GitHubSync? =
+
+WordPress offers new releases on Dashboard → Updates and the Plugins screen, so
+update it like any other plugin. If nothing appears, use **Check for updates now**
+on *GitHubSync → Settings → Plugin updates*. Self-updates can be switched off on
+the same screen or with `GITHUBSYNC_DISABLE_SELF_UPDATE`; the release zip can
+still be installed with *Plugins → Add New → Upload Plugin*.
+
 == Screenshots ==
 
 1. Dashboard with connection, queue and recent deployment status.
@@ -96,6 +106,15 @@ system cron or use *Run queue now*.
 4. History of jobs across all deployments.
 
 == Changelog ==
+
+= 0.1.9 =
+* GitHubSync now updates itself from its GitHub releases. New versions appear on Dashboard → Updates and the Plugins screen, with the release notes in the version details dialog, and WordPress installs them normally.
+* Every update is checked against a SHA-256 digest before it is installed, and only `https://` packages on GitHub hosts are accepted.
+* A twice-daily WP-Cron check looks for new releases. Settings → Plugin updates shows the last check, the installed version and a "Check for updates now" button.
+* Self-updates can be switched off on Settings → Plugin updates or with the `GITHUBSYNC_DISABLE_SELF_UPDATE` constant. The release feed can be set with the `GITHUBSYNC_UPDATE_URL` constant.
+* Publishing a `v*` tag now builds the release and its update manifest in CI, after the tests pass, and verifies both are publicly downloadable. See `docs/SELF-UPDATE.md`.
+* Every admin screen is on one visual system (0.1.8): shared cards, tables, forms, notices, badges, empty states and dialogs, and layouts that stack on narrow screens.
+* Destructive actions ask first in an accessible confirmation dialog, and copy buttons report when a value has been copied (0.1.8).
 
 = 0.1.2 =
 * The dashboard setup checklist now opens in a modal dialog from a "Show setup checklist" button, instead of occupying the top of the dashboard. The carousel, step dots and the close-only-when-complete rule are unchanged.
@@ -109,6 +128,9 @@ system cron or use *Run queue now*.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.1.9 =
+Adds self-updates: GitHubSync now appears on Dashboard → Updates like any other plugin. No settings change needed.
 
 = 0.1.2 =
 Moves the dashboard setup checklist into a dialog. No settings change needed.

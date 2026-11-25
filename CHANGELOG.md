@@ -6,6 +6,33 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-11-25
+
+### Added
+
+- **GitHubSync updates itself.** New releases are offered on the Plugins screen
+  and on Dashboard → Updates exactly like a WordPress.org plugin, and are
+  installed by WordPress with the normal one-click update. The version details
+  dialog shows the release notes. A twice-daily WP-Cron check finds a new release
+  without anyone opening the Plugins screen, and there is a *Check for updates*
+  row link on the Plugins screen plus a **Check for updates now** button on
+  *GitHubSync → Settings → Plugin updates*.
+- **Every download is verified.** The manifest (`update.json`) carries a SHA-256
+  digest, so a corrupted or swapped package is rejected before WordPress
+  installs it. Only `https://` packages on GitHub hosts are accepted.
+- **Self-updates can be switched off.** Clear the **Self-updates** checkbox on
+  the Settings screen, or define `GITHUBSYNC_DISABLE_SELF_UPDATE` in
+  `wp-config.php`. The release feed URL can be set with the
+  `GITHUBSYNC_UPDATE_URL` constant, which wins over the stored setting.
+- A `v*` tag now publishes the release in CI: the suite must pass, then
+  `githubsync.zip` and `update.json` are attached to the release and checked to
+  be publicly downloadable. See [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md).
+
+### Notes
+
+- Nothing changes for a site that leaves self-updates off: no request is made
+  and the manual **Plugins → Add New → Upload Plugin** route still works.
+
 ## [0.1.8] - 2026-11-25
 
 ### Changed

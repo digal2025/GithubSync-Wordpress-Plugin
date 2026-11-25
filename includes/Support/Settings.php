@@ -23,15 +23,16 @@ final class Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'max_archive_mb'       => 100,
-			'max_uncompressed_mb'  => 300,
-			'max_files'            => 10000,
-			'max_file_mb'          => 50,
-			'backup_retention'     => 3,
-			'log_retention_days'   => 30,
-			'max_webhook_bytes'    => 1048576,
-			'max_attempts'         => 3,
+			'max_archive_mb'           => 100,
+			'max_uncompressed_mb'      => 300,
+			'max_files'                => 10000,
+			'max_file_mb'              => 50,
+			'backup_retention'         => 3,
+			'log_retention_days'       => 30,
+			'max_webhook_bytes'        => 1048576,
+			'max_attempts'             => 3,
 			'delete_data_on_uninstall' => 0,
+			'self_update_enabled'      => 1,
 		);
 	}
 
@@ -68,15 +69,16 @@ final class Settings {
 	public static function sanitize( array $input ) {
 		$out = self::defaults();
 
-		$out['max_archive_mb']      = self::clamp( isset( $input['max_archive_mb'] ) ? $input['max_archive_mb'] : 100, 1, 2048 );
-		$out['max_uncompressed_mb'] = self::clamp( isset( $input['max_uncompressed_mb'] ) ? $input['max_uncompressed_mb'] : 300, 1, 8192 );
-		$out['max_files']           = self::clamp( isset( $input['max_files'] ) ? $input['max_files'] : 10000, 1, 100000 );
-		$out['max_file_mb']         = self::clamp( isset( $input['max_file_mb'] ) ? $input['max_file_mb'] : 50, 1, 1024 );
-		$out['backup_retention']    = self::clamp( isset( $input['backup_retention'] ) ? $input['backup_retention'] : 3, 1, 20 );
-		$out['log_retention_days']  = self::clamp( isset( $input['log_retention_days'] ) ? $input['log_retention_days'] : 30, 1, 365 );
-		$out['max_webhook_bytes']   = self::clamp( isset( $input['max_webhook_bytes'] ) ? $input['max_webhook_bytes'] : 1048576, 1024, 10485760 );
-		$out['max_attempts']        = self::clamp( isset( $input['max_attempts'] ) ? $input['max_attempts'] : 3, 1, 10 );
+		$out['max_archive_mb']           = self::clamp( isset( $input['max_archive_mb'] ) ? $input['max_archive_mb'] : 100, 1, 2048 );
+		$out['max_uncompressed_mb']      = self::clamp( isset( $input['max_uncompressed_mb'] ) ? $input['max_uncompressed_mb'] : 300, 1, 8192 );
+		$out['max_files']                = self::clamp( isset( $input['max_files'] ) ? $input['max_files'] : 10000, 1, 100000 );
+		$out['max_file_mb']              = self::clamp( isset( $input['max_file_mb'] ) ? $input['max_file_mb'] : 50, 1, 1024 );
+		$out['backup_retention']         = self::clamp( isset( $input['backup_retention'] ) ? $input['backup_retention'] : 3, 1, 20 );
+		$out['log_retention_days']       = self::clamp( isset( $input['log_retention_days'] ) ? $input['log_retention_days'] : 30, 1, 365 );
+		$out['max_webhook_bytes']        = self::clamp( isset( $input['max_webhook_bytes'] ) ? $input['max_webhook_bytes'] : 1048576, 1024, 10485760 );
+		$out['max_attempts']             = self::clamp( isset( $input['max_attempts'] ) ? $input['max_attempts'] : 3, 1, 10 );
 		$out['delete_data_on_uninstall'] = empty( $input['delete_data_on_uninstall'] ) ? 0 : 1;
+		$out['self_update_enabled']      = empty( $input['self_update_enabled'] ) ? 0 : 1;
 
 		return $out;
 	}

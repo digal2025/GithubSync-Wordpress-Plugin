@@ -3,6 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+    # v1.2.3 tags publish a release and the update manifest (see the
+    # "release" job at the bottom of this file).
+    tags: ['v*']
   pull_request:
 
 jobs:
@@ -78,3 +81,100 @@ jobs:
           GITHUBSYNC_WP_ROOT: ${{ github.workspace }}/wordpress
           GITHUBSYNC_PLUGIN_DIR: ${{ github.workspace }}/wordpress/wp-content/plugins/githubsync
         run: php tests/run-tests.php
+
+  # Publishing a release is what makes self-updates possible.
+  #
+  # WordPress downloads plugin packages with no credentials at all, so a private
+  # repository's release assets cannot be used as-is. This job therefore:
+  #
+  #   1. builds githubsync.zip from the tagged commit;
+  #   2. creates (or updates) the GitHub release for the tag and attaches the zip;
+  #   3. writes update.json — the manifest GitHubSync reads — as the release asset
+  #      update.json, pointing at that same public zip and carrying its SHA-256.
+  #
+  # The manifest URL to paste into GitHubSync → Settings → Plugin updates is:
+  #
+  #   https://github.com/digal2025/GithubSync-Wordpress-Plugin/releases/latest/download/update.json
+  #
+  # which always resolves to the most recent release. Re-run this job (or publish
+  # a new tag) whenever a release needs rebuilding.
+  release:
+    name: Publish release and update manifest
+    needs: lint-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          coverage: none
+
+      - name: Build the release archive
+        run: ./build.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Check the tag matches the plugin version
+        run: |
+          HEADER="$(sed -n 's/^ \* Version: *\(.*\)$/\1/p' githubsync.php | head -1)"
+          if [ "$HEADER" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match the plugin version ${HEADER}" >&2
+            exit 1
+          fi
+
+      - name: Write the update manifest
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: php .github/scripts/write-manifest.php dist/githubsync.zip dist/update.json
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          # Inline notes come from the matching "## [x.y.z]" block of the changelog.
+          BODY_FILE="$(mktemp)"
+          awk -v v="${TAG#v}" '
+            index($0, "## [" v "]") == 1 { on = 1; next }
+            on && index($0, "## [") == 1 { exit }
+            on { print }
+          ' CHANGELOG.md > "$BODY_FILE"
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file "$BODY_FILE" --draft=false
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "GitHubSync ${TAG#v}" --notes-file "$BODY_FILE"
+          fi
+
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
+            dist/githubsync.zip dist/update.json
+
+      - name: Verify the manifest is publicly readable
+        run: |
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/update.json"
+          for attempt in 1 2 3 4 5; do
+            STATUS="$(curl -sS -o /tmp/update.json -w '%{http_code}' -L "$URL" || true)"
+            [ "$STATUS" = "200" ] && break
+            echo "Attempt ${attempt}: HTTP ${STATUS}; retrying…"
+            sleep 10
+          done
+          if [ "$STATUS" != "200" ]; then
+            echo "The manifest is not reachable anonymously (HTTP ${STATUS})." >&2
+            echo "Self-updates need the release assets to be public." >&2
+            exit 1
+          fi
+          cat /tmp/update.json
+          ZIP_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/githubsync.zip")"
+          if [ "$ZIP_STATUS" != "200" ] && [ "$ZIP_STATUS" != "206" ]; then
+            echo "The release zip is not reachable anonymously (HTTP ${ZIP_STATUS})." >&2
+            exit 1
+          fi

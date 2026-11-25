@@ -11,6 +11,7 @@ use GitHubSync\Database\Schema;
 use GitHubSync\Queue\Queue;
 use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
+use GitHubSync\Update\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -39,6 +40,8 @@ final class Activator {
 		if ( ! wp_next_scheduled( 'githubsync_cleanup' ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'githubsync_cleanup' );
 		}
+
+		Updater::schedule();
 
 		Helpers::protect_dir( Helpers::work_dir() );
 
