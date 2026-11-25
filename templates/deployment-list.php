@@ -15,41 +15,45 @@ defined( 'ABSPATH' ) || exit;
 	</h1>
 
 	<?php if ( empty( $data['deployments'] ) ) : ?>
-		<div class="gs-empty">
-			<p><?php esc_html_e( 'No deployment configurations yet.', 'githubsync' ); ?></p>
-			<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment-new' ) ); ?>"><?php esc_html_e( 'Create your first deployment', 'githubsync' ); ?></a></p>
-		</div>
+		<?php
+		\GitHubSync\Admin\AdminMenu::empty_state(
+			__( 'No deployments yet', 'githubsync' ),
+			__( 'A deployment links a GitHub repository branch to a folder on this site. Create one to start syncing files.', 'githubsync' ),
+			'<a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=githubsync-deployment-new' ) ) . '">' . esc_html__( 'Create your first deployment', 'githubsync' ) . '</a>'
+		);
+		?>
 	<?php else : ?>
-		<table class="widefat striped gs-table">
+		<div class="gs-table-wrap">
+		<table class="widefat striped gs-table gs-deployments">
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Name', 'githubsync' ); ?></th>
 					<th><?php esc_html_e( 'Repository / branch', 'githubsync' ); ?></th>
 					<th><?php esc_html_e( 'Destination', 'githubsync' ); ?></th>
 					<th><?php esc_html_e( 'Last deployment', 'githubsync' ); ?></th>
-					<th><?php esc_html_e( 'Actions', 'githubsync' ); ?></th>
+					<th class="gs-actions"><?php esc_html_e( 'Actions', 'githubsync' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php foreach ( $data['deployments'] as $gs_row ) : ?>
 					<?php $gs_last = isset( $gs_row['last_job'] ) ? $gs_row['last_job'] : null; ?>
 					<tr>
-						<td>
+						<td data-gs-label="<?php esc_attr_e( 'Name', 'githubsync' ); ?>">
 							<strong><a href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment&id=' . (int) $gs_row['id'] ) ); ?>"><?php echo esc_html( $gs_row['name'] ); ?></a></strong>
-							<div class="gs-muted">
+							<div class="gs-muted gs-deployments__meta">
 								<?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_row['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-								<?php echo (int) $gs_row['auto_deploy'] ? esc_html__( 'Auto-deploy on', 'githubsync' ) : esc_html__( 'Auto-deploy off', 'githubsync' ); ?>
+								<span><?php echo (int) $gs_row['auto_deploy'] ? esc_html__( 'Auto-deploy on', 'githubsync' ) : esc_html__( 'Auto-deploy off', 'githubsync' ); ?></span>
 							</div>
 						</td>
-						<td>
-							<code><?php echo esc_html( $gs_row['repository_full_name'] ); ?></code><br>
-							<span class="gs-muted"><?php echo esc_html( $gs_row['branch'] ); ?></span>
+						<td data-gs-label="<?php esc_attr_e( 'Repository / branch', 'githubsync' ); ?>">
+							<code class="gs-path"><?php echo esc_html( $gs_row['repository_full_name'] ); ?></code>
+							<div class="gs-muted"><?php echo esc_html( $gs_row['branch'] ); ?></div>
 						</td>
-						<td>
-							<code class="gs-path"><?php echo esc_html( $gs_row['destination_path'] ); ?></code>
+						<td data-gs-label="<?php esc_attr_e( 'Destination', 'githubsync' ); ?>">
+							<code class="gs-path-soft"><?php echo esc_html( $gs_row['destination_path'] ); ?></code>
 							<div class="gs-muted"><?php echo esc_html( isset( $data['types'][ $gs_row['deployment_type'] ] ) ? $data['types'][ $gs_row['deployment_type'] ] : $gs_row['deployment_type'] ); ?></div>
 						</td>
-						<td>
+						<td data-gs-label="<?php esc_attr_e( 'Last deployment', 'githubsync' ); ?>">
 							<?php if ( $gs_last ) : ?>
 								<?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_last['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 								<div class="gs-muted">
@@ -60,7 +64,7 @@ defined( 'ABSPATH' ) || exit;
 								<span class="gs-muted"><?php esc_html_e( 'Never', 'githubsync' ); ?></span>
 							<?php endif; ?>
 						</td>
-						<td class="gs-actions">
+						<td class="gs-actions" data-gs-label="<?php esc_attr_e( 'Actions', 'githubsync' ); ?>">
 							<a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment-edit&id=' . (int) $gs_row['id'] ) ); ?>"><?php esc_html_e( 'Edit', 'githubsync' ); ?></a>
 
 							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
@@ -70,7 +74,15 @@ defined( 'ABSPATH' ) || exit;
 								<button type="submit" class="button button-small"><?php esc_html_e( 'Deploy now', 'githubsync' ); ?></button>
 							</form>
 
-							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this configuration? Deployed files, backups and history are kept.', 'githubsync' ) ); ?>');">
+							<form
+								method="post"
+								action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+								class="gs-inline"
+								data-gs-confirm="<?php echo esc_attr( sprintf( /* translators: %s: deployment name. */ __( 'Delete the “%s” configuration?', 'githubsync' ), $gs_row['name'] ) ); ?>"
+								data-gs-confirm-text="<?php esc_attr_e( 'Only the configuration is removed. Files already deployed, their backups and the deployment history are kept.', 'githubsync' ); ?>"
+								data-gs-confirm-ok="<?php esc_attr_e( 'Delete configuration', 'githubsync' ); ?>"
+								data-gs-confirm-danger="1"
+							>
 								<?php wp_nonce_field( 'githubsync_delete_deployment' ); ?>
 								<input type="hidden" name="action" value="githubsync_delete_deployment">
 								<input type="hidden" name="id" value="<?php echo esc_attr( (string) $gs_row['id'] ); ?>">
@@ -82,5 +94,6 @@ defined( 'ABSPATH' ) || exit;
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		</div>
 	<?php endif; ?>
 </div>

@@ -12,8 +12,15 @@ defined( 'ABSPATH' ) || exit;
 	<h1 class="gs-title"><?php esc_html_e( 'Deployment History', 'githubsync' ); ?></h1>
 
 	<?php if ( empty( $data['jobs'] ) ) : ?>
-		<p class="gs-muted"><?php esc_html_e( 'No deployment jobs have been recorded.', 'githubsync' ); ?></p>
+		<?php
+		\GitHubSync\Admin\AdminMenu::empty_state(
+			__( 'No deployment jobs recorded', 'githubsync' ),
+			__( 'Every deployment attempt, whether triggered by a push or run manually, is listed here once it starts.', 'githubsync' ),
+			'<a class="button" href="' . esc_url( admin_url( 'admin.php?page=githubsync-deployments' ) ) . '">' . esc_html__( 'Go to deployments', 'githubsync' ) . '</a>'
+		);
+		?>
 	<?php else : ?>
+		<div class="gs-table-wrap">
 		<table class="widefat striped gs-table">
 			<thead>
 				<tr>
@@ -61,5 +68,6 @@ defined( 'ABSPATH' ) || exit;
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		</div>
 	<?php endif; ?>
 </div>

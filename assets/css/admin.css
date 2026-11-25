@@ -1,105 +1,220 @@
 /**
  * GitHubSync admin styles.
+ *
+ * A small design system built on WordPress admin design tokens. Every value
+ * is declared once in :root and reused, so the screens share one rhythm and
+ * change together. Sections, in order:
+ *
+ *  1. Tokens
+ *  2. Layout
+ *  3. Typography
+ *  4. Badges and pills
+ *  5. Cards and stats
+ *  6. Notices and messages
+ *  7. Tables
+ *  8. Forms
+ *  9. Action bars and empty states
+ * 10. Setup checklist dialog
+ * 11. Code and logs
+ * 12. Responsive
  */
+
+/* 1. Tokens ---------------------------------------------------------------- */
+
+:root {
+	/* WordPress admin palette (@wordpress/base-styles). */
+	--gs-color-black: #000;
+	--gs-color-gray-900: #1d2327;
+	--gs-color-gray-700: #2c3338;
+	--gs-color-gray-600: #3c434a;
+	--gs-color-gray-500: #50575e;
+	--gs-color-gray-400: #646970;
+	--gs-color-gray-300: #8c8f94;
+	--gs-color-gray-200: #c3c4c7;
+	--gs-color-gray-100: #dcdcde;
+	--gs-color-gray-50: #f0f0f1;
+	--gs-color-gray-0: #f6f7f7;
+	--gs-color-white: #fff;
+	--gs-color-primary: #2271b1;
+	--gs-color-primary-dark: #135e96;
+	--gs-color-primary-light: #dcebfd;
+	--gs-color-success: #00a32a;
+	--gs-color-success-dark: #00631a;
+	--gs-color-success-light: #d1f0d8;
+	--gs-color-error: #d63638;
+	--gs-color-error-dark: #8a1f1f;
+	--gs-color-error-light: #fbdcdc;
+	--gs-color-warning: #dba617;
+	--gs-color-warning-dark: #7a5300;
+	--gs-color-warning-light: #fdf0d2;
+	--gs-color-info-light: #f0f6fc;
+
+	/* Spacing scale (4px base). */
+	--gs-space-1: 4px;
+	--gs-space-2: 8px;
+	--gs-space-3: 12px;
+	--gs-space-4: 16px;
+	--gs-space-5: 24px;
+	--gs-space-6: 32px;
+
+	/* Radii. */
+	--gs-radius-sm: 2px;
+	--gs-radius: 4px;
+	--gs-radius-pill: 999px;
+
+	/* Type. */
+	--gs-font-size-sm: 12px;
+	--gs-font-size: 13px;
+	--gs-font-size-lg: 15px;
+	--gs-font-size-value: 24px;
+
+	/* Misc. */
+	--gs-border: 1px solid var(--gs-color-gray-100);
+	--gs-shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* 2. Layout ---------------------------------------------------------------- */
 
 .gs-wrap {
 	max-width: 1200px;
 }
 
+.gs-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--gs-space-4);
+	margin: var(--gs-space-4) 0 var(--gs-space-2);
+}
+
+/* 3. Typography ------------------------------------------------------------ */
+
 .gs-title {
 	display: flex;
 	align-items: center;
-	gap: 10px;
 	flex-wrap: wrap;
+	gap: var(--gs-space-2);
 }
 
 .gs-subtitle {
-	color: #50575e;
-	margin-top: -6px;
+	margin: 0 0 var(--gs-space-3);
+	color: var(--gs-color-gray-500);
 }
 
 .gs-section-title {
-	margin-top: 28px;
-	padding-top: 18px;
-	border-top: 1px solid #dcdcde;
+	margin: var(--gs-space-5) 0 var(--gs-space-3);
+	padding-top: var(--gs-space-4);
+	border-top: var(--gs-border);
+	font-size: var(--gs-font-size-lg);
 }
 
-.gs-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-	gap: 16px;
-	margin: 16px 0 8px;
-}
-
-.gs-card {
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
-	padding: 16px 18px;
-	box-sizing: border-box;
-}
-
-.gs-card h2 {
+/* The heading above a card carries the separation, so the card needs no gap. */
+.gs-section-title + .gs-card,
+.gs-section-title + details.gs-card {
 	margin-top: 0;
-	font-size: 14px;
-	text-transform: uppercase;
-	letter-spacing: .04em;
-	color: #50575e;
 }
 
-.gs-card--wide {
-	grid-column: 1 / -1;
+/* Collapsible card: the summary is the clickable header. */
+details.gs-card > summary {
+	margin: calc(-1 * var(--gs-space-3)) calc(-1 * var(--gs-space-4));
+	padding: var(--gs-space-3) var(--gs-space-4) var(--gs-space-3) 2.2em;
+	position: relative;
+	cursor: pointer;
+	list-style: none;
+	border-radius: var(--gs-radius) var(--gs-radius) 0 0;
+	background: var(--gs-color-gray-0);
 }
 
-.gs-card--ok {
-	border-left: 4px solid #00a32a;
+details.gs-card > summary::-webkit-details-marker {
+	display: none;
 }
 
-.gs-card--bad {
-	border-left: 4px solid #d63638;
+details.gs-card > summary::before {
+	content: "\25B8";
+	position: absolute;
+	left: var(--gs-space-4);
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--gs-color-gray-400);
 }
 
-.gs-big {
-	font-size: 26px;
-	font-weight: 600;
-	margin: 4px 0;
-	line-height: 1.2;
+details.gs-card[open] > summary::before {
+	content: "\25BE";
+}
+
+details.gs-card[open] > summary {
+	border-bottom: var(--gs-border);
+	margin-bottom: var(--gs-space-3);
+}
+
+details.gs-card > summary:focus-visible {
+	outline: 2px solid var(--gs-color-primary);
+	outline-offset: -2px;
+}
+
+/* Page head: title block plus optional right-aligned actions. */
+.gs-page-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--gs-space-3);
+	margin-bottom: var(--gs-space-3);
+}
+
+/* A page-title-action next to the h1 should line up with the title text. */
+.wrap.gs-wrap > h1.gs-title .page-title-action,
+.wrap.gs-wrap > h1.gs-title a.button {
+	align-self: center;
+	vertical-align: middle;
+}
+
+.gs-page-head .gs-title,
+.gs-page-head .gs-subtitle {
+	margin-bottom: 0;
+}
+
+.gs-page-head__text {
+	flex: 1 1 320px;
+	min-width: 0;
+}
+
+.gs-page-head__actions {
+	flex: 0 0 auto;
+}
+
+/* Small "← Back to …" link above a title. */
+.gs-backlink {
+	margin: 0 0 var(--gs-space-1);
+	font-size: var(--gs-font-size-sm);
+}
+
+.gs-backlink a {
+	text-decoration: none;
+}
+
+.gs-backlink a:hover,
+.gs-backlink a:focus {
+	text-decoration: underline;
 }
 
 .gs-muted {
-	color: #646970;
-	font-size: 12px;
+	color: var(--gs-color-gray-400);
+	font-size: var(--gs-font-size-sm);
 }
 
 .gs-hint {
-	margin: 0 0 .75em 1.5em;
-	color: #646970;
-	font-size: 12px;
+	margin: 0 0 0.75em;
+	color: var(--gs-color-gray-400);
+	font-size: var(--gs-font-size-sm);
 }
 
-.gs-ok {
-	color: #007017;
+/* Field help text sits under its input with a tight gap. */
+.gs-form .form-table .description.gs-hint {
+	margin: var(--gs-space-1) 0 0;
 }
 
-.gs-bad {
-	color: #b32d2e;
-}
-
-.gs-warn {
-	color: #996800;
-}
-
-.gs-table {
-	margin-top: 8px;
-}
-
-.gs-table td,
-.gs-table th {
-	vertical-align: top;
-}
-
-.gs-path {
-	word-break: break-all;
+.gs-form .form-table .description + .description.gs-hint {
+	margin-top: var(--gs-space-1);
 }
 
 .gs-break {
@@ -107,47 +222,487 @@
 	white-space: normal;
 }
 
+.gs-path {
+	word-break: break-all;
+}
+
+.gs-big {
+	margin: var(--gs-space-1) 0;
+	line-height: 1.2;
+	font-size: var(--gs-font-size-value);
+	font-weight: 600;
+}
+
+.gs-ok {
+	color: var(--gs-color-success-dark);
+}
+
+.gs-bad {
+	color: var(--gs-color-error-dark);
+}
+
+.gs-warn {
+	color: var(--gs-color-warning-dark);
+}
+
+/* 4. Badges and pills ------------------------------------------------------ */
+
 .gs-badge {
 	display: inline-block;
-	padding: 1px 8px;
-	border-radius: 10px;
+	padding: 1px var(--gs-space-2);
+	border-radius: var(--gs-radius-pill);
 	font-size: 11px;
 	font-weight: 600;
 	line-height: 1.7;
-	text-transform: uppercase;
-	letter-spacing: .03em;
+	white-space: nowrap;
 }
 
 .gs-badge--success {
-	background: #d1f0d8;
-	color: #00631a;
+	background: var(--gs-color-success-light);
+	color: var(--gs-color-success-dark);
 }
 
 .gs-badge--info {
-	background: #dcebfd;
-	color: #0b4a8f;
+	background: var(--gs-color-primary-light);
+	color: var(--gs-color-primary-dark);
 }
 
 .gs-badge--warning {
-	background: #fdf0d2;
-	color: #7a5300;
+	background: var(--gs-color-warning-light);
+	color: var(--gs-color-warning-dark);
 }
 
 .gs-badge--error {
-	background: #fbdcdc;
-	color: #8a1f1f;
+	background: var(--gs-color-error-light);
+	color: var(--gs-color-error-dark);
 }
 
 .gs-badge--muted {
-	background: #eaeaea;
-	color: #50575e;
+	background: var(--gs-color-gray-50);
+	color: var(--gs-color-gray-500);
 }
 
-.gs-actions {
+/* 5. Cards and stats ------------------------------------------------------- */
+
+/* Label/value pairs: a compact list inside a card. */
+.gs-facts {
+	margin: 0 0 var(--gs-space-3);
+	padding: 0;
+	list-style: none;
+}
+
+.gs-facts li {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--gs-space-3);
+	padding: var(--gs-space-1) 0;
+	border-bottom: 1px solid var(--gs-color-gray-50);
+}
+
+.gs-facts li:last-child {
+	border-bottom: 0;
+}
+
+.gs-facts li > span:first-child {
+	color: var(--gs-color-gray-400);
+}
+
+.gs-card {
+	padding: var(--gs-space-4);
+	border: var(--gs-border);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
+	box-sizing: border-box;
+}
+
+.gs-card > h2:first-child {
+	margin-top: 0;
+}
+
+.gs-card h2 {
+	color: var(--gs-color-gray-500);
+}
+
+/* Caption headings inside stat cards keep the small label treatment. */
+.gs-card .gs-stat__label {
+	color: var(--gs-color-gray-400);
+	font-size: 11px;
+}
+
+.gs-card--wide {
+	grid-column: 1 / -1;
+}
+
+/* Two-column layout: a narrow side card next to a wide main card. */
+.gs-columns {
+	display: grid;
+	grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+	gap: var(--gs-space-4);
+	align-items: start;
+}
+
+.gs-card--side {
+	align-self: start;
+}
+
+.gs-card--ok {
+	border-left: 4px solid var(--gs-color-success);
+}
+
+.gs-card--bad {
+	border-left: 4px solid var(--gs-color-error);
+}
+
+/* Status strip: one line of connection state plus the actions that change it. */
+.gs-status-line {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6px;
 	align-items: center;
+	gap: var(--gs-space-2) var(--gs-space-4);
+	padding: var(--gs-space-3) var(--gs-space-4);
+	border: var(--gs-border);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
+}
+
+.gs-status-line__state {
+	font-weight: 600;
+}
+
+.gs-status-line__meta {
+	color: var(--gs-color-gray-400);
+	font-size: var(--gs-font-size-sm);
+	overflow-wrap: anywhere;
+}
+
+.gs-status-line__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gs-space-2);
+	margin: 0;
+	margin-left: auto;
+}
+
+/* Stat card: one number, a caption, optional footnote. */
+.gs-card--stat {
+	display: flex;
+	flex-direction: column;
+}
+
+.gs-stat__label {
+	margin: 0;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--gs-color-gray-400);
+}
+
+.gs-stat__value {
+	margin: var(--gs-space-1) 0;
+	line-height: 1.15;
+	font-size: var(--gs-font-size-value);
+	font-weight: 600;
+	color: var(--gs-color-gray-900);
+}
+
+.gs-stat__value .gs-badge {
+	font-size: var(--gs-font-size-sm);
+	vertical-align: middle;
+}
+
+.gs-stat__meta {
+	margin: 0 0 var(--gs-space-3);
+	color: var(--gs-color-gray-400);
+	font-size: var(--gs-font-size-sm);
+}
+
+.gs-card--stat .gs-actions {
+	margin-top: auto;
+}
+
+/* 6. Notices and messages -------------------------------------------------- */
+
+.gs-notice {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--gs-space-2);
+	margin: 0 0 var(--gs-space-4);
+	padding: var(--gs-space-3) var(--gs-space-4);
+	border: 1px solid var(--gs-color-gray-100);
+	border-left: 4px solid var(--gs-color-primary);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
+	font-size: var(--gs-font-size);
+}
+
+.gs-notice:last-child {
+	margin-bottom: 0;
+}
+
+.gs-notice--success {
+	border-color: var(--gs-color-success-light);
+	border-left-color: var(--gs-color-success);
+	background: #f0fbf2;
+}
+
+.gs-notice--warning {
+	border-color: var(--gs-color-warning-light);
+	border-left-color: var(--gs-color-warning);
+	background: #fffcf0;
+}
+
+.gs-notice--error {
+	border-color: var(--gs-color-error-light);
+	border-left-color: var(--gs-color-error);
+	background: #fdf5f5;
+}
+
+.gs-notice--info {
+	border-left-color: var(--gs-color-primary);
+	background: var(--gs-color-info-light);
+}
+
+/* 7. Tables ---------------------------------------------------------------- */
+
+/* Horizontal scroll for wide tables on narrow screens. */
+.gs-table-wrap {
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.gs-table {
+	margin-top: var(--gs-space-2);
+}
+
+.gs-table td,
+.gs-table th {
+	vertical-align: top;
+}
+
+.gs-table td.gs-actions {
+	display: table-cell;
+	white-space: nowrap;
+}
+
+/* Action cell holds several inline forms; lay them out as one row. */
+.gs-table td.gs-actions .gs-inline {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.gs-table td.gs-actions > * {
+	vertical-align: middle;
+}
+
+.gs-table td.gs-actions > * + * {
+	margin-left: var(--gs-space-1);
+}
+
+.gs-checks td {
+	font-size: var(--gs-font-size);
+}
+
+/* Diagnostics table: predictable column widths so notes stay readable. */
+.gs-checks th:nth-child(1) {
+	width: 22%;
+}
+
+.gs-checks th:nth-child(2) {
+	width: 26%;
+}
+
+.gs-checks th:nth-child(3) {
+	width: 10%;
+}
+
+.gs-checks .gs-check-value {
+	font-size: var(--gs-font-size-sm);
+}
+
+/* Settings screen: the form sits comfortably inside a card. */
+.gs-settings .form-table {
+	margin-top: var(--gs-space-2);
+}
+
+.gs-settings .form-table th,
+.gs-settings .form-table td {
+	padding-left: 0;
+}
+
+.gs-settings input[type="submit"],
+.gs-settings .submit {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+/* Deployments list: give each column a share of the width and let paths
+   wrap inside their own column instead of pushing the table wider. */
+.gs-deployments {
+	table-layout: auto;
+}
+
+.gs-deployments th,
+.gs-deployments td {
+	padding-top: var(--gs-space-3);
+	padding-bottom: var(--gs-space-3);
+}
+
+.gs-deployments__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gs-space-1) var(--gs-space-2);
+	margin-top: var(--gs-space-1);
+	white-space: nowrap;
+}
+
+.gs-deployments code {
+	display: inline-block;
+	max-width: 100%;
+	padding: 0 5px;
+	font-size: var(--gs-font-size-sm);
+	line-height: 1.6;
+	background: none;
+}
+
+/* Repository names are short; break only when there is no other option. */
+.gs-deployments .gs-path {
+	word-break: normal;
+	overflow-wrap: anywhere;
+}
+
+/* Full filesystem paths break on separators first, anywhere only as a last resort. */
+.gs-deployments .gs-path-soft {
+	display: block;
+	max-width: 32em;
+	word-break: normal;
+	overflow-wrap: anywhere;
+}
+
+/* Actions stay on one line and never take more room than they need. */
+.gs-deployments th.gs-actions,
+.gs-deployments td.gs-actions {
+	width: 1%;
+	white-space: nowrap;
+}
+
+/* Date column is short and predictable. */
+.gs-deployments th:nth-child(4) {
+	width: 14%;
+}
+
+/* Repository names stay on one line; the column grows to fit them. */
+.gs-deployments td:nth-child(2) {
+	white-space: nowrap;
+}
+
+/* 8. Forms ----------------------------------------------------------------- */
+
+.gs-form {
+	margin: 0;
+}
+
+/* Give the left-hand field labels room so their help text is not cramped. */
+.gs-form .form-table th {
+	width: 190px;
+	padding-right: var(--gs-space-5);
+}
+
+/* WordPress indents the first cell by 10px; the card already provides that. */
+.gs-form .form-table th:first-child,
+.gs-form .form-table td:first-child {
+	padding-left: 0;
+}
+
+.gs-form .form-table td {
+	padding-right: var(--gs-space-5);
+}
+
+/* A form inside a card keeps its submit row but not the extra bottom gap. */
+.gs-card > form.gs-form > .submit,
+.gs-form .form-table + p.submit {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+.gs-form .form-table input.regular-text,
+.gs-form .form-table input[type="number"] {
+	max-width: 100%;
+}
+
+/* Text inputs in the deployment form line up in one readable column. */
+.gs-form .form-table input.regular-text {
+	width: 30em;
+}
+
+/* Code-like inputs keep a short, natural height. */
+.gs-form .gs-code-input {
+	min-height: 0;
+	max-width: 46em;
+}
+
+/* Dense settings rows: one number per line, no wasted height. */
+.gs-form--dense .form-table th,
+.gs-form--dense .form-table td {
+	padding-top: var(--gs-space-2);
+	padding-bottom: var(--gs-space-2);
+}
+
+.gs-form--dense .form-table th {
+	width: 260px;
+}
+
+.gs-form--dense .form-table input[type="number"] {
+	width: 8em;
+}
+
+/* A checkbox with its help text forms one block. */
+.gs-check-group {
+	margin-bottom: var(--gs-space-3);
+}
+
+.gs-check-group label {
+	display: block;
+	font-weight: 600;
+	color: var(--gs-color-gray-700);
+}
+
+/* Help panel shown above the deployment form. */
+.gs-help {
+	background: var(--gs-color-gray-0);
+}
+
+.gs-help__title {
+	margin: 0 0 var(--gs-space-2);
+	font-size: var(--gs-font-size-lg);
+	color: var(--gs-color-gray-900);
+}
+
+.gs-help p {
+	margin: 0 0 var(--gs-space-2);
+}
+
+.gs-help__list {
+	margin: 0 0 var(--gs-space-2);
+	padding-left: 1.2em;
+	list-style: disc;
+}
+
+.gs-help__list li {
+	margin-bottom: 0.3em;
+}
+
+.gs-help__note {
+	color: var(--gs-color-gray-400);
+	font-size: var(--gs-font-size-sm);
+}
+
+.gs-form > .form-table + .submit {
+	margin-bottom: 0;
+	padding-top: var(--gs-space-2);
 }
 
 .gs-inline {
@@ -155,30 +710,81 @@
 	margin: 0;
 }
 
+.gs-inline + .gs-inline {
+	margin-left: var(--gs-space-1);
+}
+
+/* Read-only value with a Copy button beside it. */
+.gs-copy-field {
+	margin: var(--gs-space-3) 0;
+}
+
+.gs-copy-field label {
+	display: block;
+	margin-bottom: var(--gs-space-1);
+	font-weight: 600;
+}
+
+.gs-copy-field__row {
+	display: flex;
+	align-items: stretch;
+	gap: var(--gs-space-2);
+}
+
+.gs-copy-field__row input {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+}
+
+.gs-copy-field__row .gs-copy {
+	flex: 0 0 auto;
+}
+
+/* 9. Action bars and empty states ------------------------------------------ */
+
+.gs-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gs-space-2);
+}
+
 .gs-actionbar {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
 	align-items: center;
-	margin: 12px 0;
+	gap: var(--gs-space-2);
+	margin: var(--gs-space-3) 0;
+}
+
+/* A single secondary action after a line of help text. */
+.gs-form > .gs-field-actions {
+	margin: var(--gs-space-4) 0 0;
+}
+
+.gs-checkbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gs-space-2);
+	margin: 0 0 var(--gs-space-3);
+}
+
+.gs-checkbar__form {
+	margin: 0;
 }
 
 .gs-danger {
-	color: #b32d2e !important;
-	border-color: #b32d2e !important;
+	color: var(--gs-color-error-dark);
+	border-color: var(--gs-color-error);
 }
 
-.gs-danger:hover {
-	background: #b32d2e !important;
-	color: #fff !important;
-}
-
-.gs-empty {
-	background: #fff;
-	border: 1px dashed #c3c4c7;
-	padding: 32px;
-	text-align: center;
-	margin-top: 16px;
+.gs-danger:hover,
+.gs-danger:focus {
+	color: var(--gs-color-white);
+	background: var(--gs-color-error);
+	border-color: var(--gs-color-error);
 }
 
 .gs-list {
@@ -186,66 +792,61 @@
 	list-style: disc;
 }
 
-.gs-checklist-bar {
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 10px;
-	margin: 0 0 8px;
+.gs-empty {
+	margin-top: var(--gs-space-4);
+	padding: var(--gs-space-6) var(--gs-space-4);
+	border: 1px dashed var(--gs-color-gray-200);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
+	text-align: center;
 }
 
-.gs-checklist-bar__open .gs-badge {
-	margin-left: 6px;
+.gs-empty__title {
+	margin: 0 0 var(--gs-space-1);
+	font-size: var(--gs-font-size-lg);
+	font-weight: 600;
+	color: var(--gs-color-gray-900);
 }
 
-.gs-checklist-bar__form {
+.gs-empty__text {
+	margin: 0 0 var(--gs-space-3);
+	color: var(--gs-color-gray-500);
+}
+
+.gs-empty__actions {
 	margin: 0;
 }
+
+/* 10. Setup checklist dialog ----------------------------------------------- */
 
 .gs-dialog {
 	width: min(680px, calc(100vw - 32px));
 	max-height: calc(100vh - 64px);
 	margin: 8vh auto auto;
 	padding: 0;
-	border: 1px solid #c3c4c7;
-	border-radius: 6px;
-	background: #fff;
-	color: #1d2327;
-	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-	overflow: visible;
+	border: var(--gs-border);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
+	color: var(--gs-color-gray-900);
+	box-shadow: var(--gs-shadow-pop);
 }
 
 .gs-dialog::backdrop {
 	background: rgba(0, 0, 0, 0.55);
 }
 
-.gs-dialog--complete {
-	border-top: 4px solid #00a32a;
-}
-
-.gs-dialog:not(.gs-dialog--complete) {
-	border-top: 4px solid #dba617;
-}
-
 .gs-dialog__inner {
 	max-height: calc(100vh - 64px);
 	overflow-y: auto;
-	padding: 20px 22px 16px;
+	padding: var(--gs-space-5);
 	box-sizing: border-box;
-}
-
-/* Fallback for browsers without <dialog>: render as an inline card. */
-.gs-dialog[open] {
-	position: fixed;
-	inset: 0;
-	z-index: 100000;
 }
 
 .gs-dialog__head {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
-	gap: 16px;
+	gap: var(--gs-space-4);
 }
 
 .gs-dialog__title {
@@ -254,7 +855,7 @@
 }
 
 .gs-dialog__title h2 {
-	margin: 0 0 4px;
+	margin: 0 0 var(--gs-space-1);
 	padding: 0;
 	font-size: 18px;
 }
@@ -265,9 +866,9 @@
 	height: 32px;
 	padding: 0;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--gs-radius);
 	background: transparent;
-	color: #50575e;
+	color: var(--gs-color-gray-500);
 	font-size: 24px;
 	line-height: 1;
 	cursor: pointer;
@@ -275,70 +876,74 @@
 
 .gs-dialog__x:hover,
 .gs-dialog__x:focus {
-	background: #f0f0f1;
-	color: #1d2327;
+	background: var(--gs-color-gray-50);
+	color: var(--gs-color-gray-900);
 }
 
 .gs-dialog__foot {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
-	flex-wrap: wrap;
-	margin-top: 16px;
-	padding-top: 12px;
-	border-top: 1px solid #dcdcde;
+	gap: var(--gs-space-3);
+	margin-top: var(--gs-space-4);
+	padding-top: var(--gs-space-3);
+	border-top: var(--gs-border);
 }
 
 .gs-dialog__hint {
-	margin: 0;
-	font-size: 12px;
 	flex: 1 1 auto;
+	margin: 0;
+	font-size: var(--gs-font-size-sm);
 }
 
 .gs-dialog__dismiss {
 	margin: 0 0 0 auto;
 }
 
+.gs-dialog__cron {
+	margin: var(--gs-space-3) 0 0;
+	font-size: var(--gs-font-size-sm);
+}
+
 .gs-progress {
-	height: 6px;
-	margin: 10px 0 0;
 	max-width: 420px;
-	background: #f0f0f1;
+	height: 6px;
+	margin: var(--gs-space-2) 0 0;
 	border-radius: 3px;
+	background: var(--gs-color-gray-50);
 	overflow: hidden;
 }
 
 .gs-progress__bar {
 	display: block;
 	height: 100%;
-	background: #2271b1;
+	background: var(--gs-color-primary);
 	transition: width 0.2s ease;
 }
 
 .gs-dialog--complete .gs-progress__bar {
-	background: #00a32a;
+	background: var(--gs-color-success);
 }
 
 .gs-carousel {
-	margin-top: 16px;
+	margin-top: var(--gs-space-4);
 }
 
 .gs-carousel__viewport {
+	border: var(--gs-border);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-white);
 	overflow: hidden;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
-	background: #fff;
 }
 
 .gs-slide {
-	padding: 16px 18px 4px;
-	border-left: 4px solid #dba617;
-	border-radius: 3px;
+	padding: var(--gs-space-4) var(--gs-space-4) var(--gs-space-1);
+	border-left: 4px solid var(--gs-color-warning);
 }
 
 .gs-slide--done {
-	border-left-color: #00a32a;
+	border-left-color: var(--gs-color-success);
 }
 
 .gs-slide[hidden] {
@@ -347,30 +952,68 @@
 
 .gs-slide__kicker {
 	margin: 0 0 2px;
-	color: #646970;
+	color: var(--gs-color-gray-400);
 	font-size: 11px;
-	text-transform: uppercase;
+	font-weight: 600;
 	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .gs-slide__title {
 	display: flex;
 	align-items: center;
-	gap: 8px;
 	flex-wrap: wrap;
-	margin: 0 0 8px;
+	gap: var(--gs-space-2);
+	margin: 0 0 var(--gs-space-2);
 }
 
 .gs-slide__state {
 	margin-top: -6px;
 }
 
+.gs-carousel__status {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--gs-space-3);
+	margin-top: var(--gs-space-3);
+}
+
+.gs-dots {
+	display: flex;
+	gap: 6px;
+}
+
+.gs-dot {
+	width: 12px;
+	height: 12px;
+	padding: 0;
+	border: 1px solid var(--gs-color-gray-300);
+	border-radius: 50%;
+	background: var(--gs-color-white);
+	cursor: pointer;
+}
+
+.gs-dot--done {
+	border-color: var(--gs-color-success);
+	background: var(--gs-color-success);
+}
+
+.gs-dot[aria-selected="true"] {
+	border-color: var(--gs-color-primary);
+	box-shadow: 0 0 0 2px var(--gs-color-primary);
+}
+
+.gs-carousel__counter {
+	font-size: var(--gs-font-size-sm);
+}
+
 .gs-carousel__nav {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
-	margin-top: 12px;
+	gap: var(--gs-space-3);
+	margin-top: var(--gs-space-3);
 }
 
 .gs-carousel__nav-prev,
@@ -384,81 +1027,242 @@
 	cursor: default;
 }
 
-.gs-carousel__status {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	margin-top: 10px;
-}
-
-.gs-dots {
-	display: flex;
-	gap: 6px;
-}
-
-.gs-dot {
-	width: 12px;
-	height: 12px;
-	padding: 0;
-	border: 1px solid #8c8f94;
-	border-radius: 50%;
-	background: #fff;
-	cursor: pointer;
-}
-
-.gs-dot--done {
-	background: #00a32a;
-	border-color: #00a32a;
-}
-
-.gs-dot[aria-selected="true"] {
-	box-shadow: 0 0 0 2px #2271b1;
-	border-color: #2271b1;
-}
-
-.gs-carousel__counter {
-	font-size: 12px;
-}
-
-.gs-dialog__cron {
-	margin: 12px 0 0;
-	font-size: 12px;
-}
-
-@media screen and (max-width: 782px) {
-	.gs-carousel__nav-prev,
-	.gs-carousel__nav-next {
-		flex: 1 1 0;
-		text-align: center;
-	}
-}
+/* 11. Code and logs -------------------------------------------------------- */
 
 .gs-code {
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	padding: 10px 12px;
+	margin: var(--gs-space-3) 0;
+	padding: var(--gs-space-3);
+	border: var(--gs-border);
+	border-radius: var(--gs-radius);
+	background: var(--gs-color-gray-0);
+	font-size: var(--gs-font-size-sm);
 	overflow-x: auto;
-	font-size: 12px;
 }
 
 .gs-log td {
-	font-size: 12px;
+	font-size: var(--gs-font-size-sm);
 }
 
 .gs-pager {
 	display: flex;
-	gap: 8px;
-	margin-top: 12px;
+	gap: var(--gs-space-2);
+	margin-top: var(--gs-space-3);
 }
 
-.gs-checks td {
-	font-size: 13px;
-}
+/* 12. Responsive ----------------------------------------------------------- */
 
 @media screen and (max-width: 782px) {
-	.gs-actions {
+	.gs-grid,
+	.gs-columns {
+		grid-template-columns: 1fr;
+	}
+
+	.gs-actions,
+	.gs-actionbar,
+	.gs-status-line__actions {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	.gs-status-line__actions {
+		margin-left: 0;
+	}
+
+	.gs-table td.gs-actions {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--gs-space-2);
+	}
+
+	.gs-table td.gs-actions > * {
+		display: block;
+		margin-left: 0;
+	}
+
+	.gs-table td.gs-actions .button {
+		box-sizing: border-box;
+		width: 100%;
+		text-align: center;
+	}
+
+	.gs-table:not(.gs-deployments) {
+		min-width: 560px;
+	}
+
+	/* Narrow screens: the label sits above its field instead of beside it. */
+	.gs-form .form-table th,
+	.gs-form .form-table td {
+		display: block;
+		width: auto;
+		padding: 0;
+	}
+
+	.gs-form .form-table th {
+		padding-top: var(--gs-space-3);
+	}
+
+	.gs-form .form-table td {
+		padding-top: var(--gs-space-1);
+	}
+
+	/* The deployment table has its own stacked layout below. */
+	.gs-deployments,
+	.gs-deployments tbody,
+	.gs-deployments tr,
+	.gs-deployments td {
+		display: block;
+		width: auto;
+	}
+
+	.gs-deployments thead {
+		display: none;
+	}
+
+	.gs-deployments tr {
+		padding: var(--gs-space-3) 0;
+		border-top: 1px solid var(--gs-color-border);
+	}
+
+	.gs-deployments tr:first-child {
+		border-top: 0;
+	}
+
+	.gs-deployments td {
+		padding: var(--gs-space-1) var(--gs-space-4);
+		white-space: normal;
+	}
+
+	/* Each cell gets its column name, so the values stay readable. */
+	.gs-deployments td::before {
+		content: attr(data-gs-label);
+		display: block;
+		margin-bottom: 2px;
+		color: var(--gs-color-text-muted);
+		font-size: var(--gs-font-size-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+
+	.gs-deployments td.gs-actions {
+		margin-top: var(--gs-space-2);
+	}
+
+	.gs-deployments td.gs-actions > * {
+		display: block;
+		margin: 0 0 var(--gs-space-2);
+	}
+
+	.gs-deployments td.gs-actions > *:last-child {
+		margin-bottom: 0;
+	}
+
+	/* Specific enough to beat the generic action-bar button rules. */
+	.gs-deployments td.gs-actions,
+	.gs-deployments td.gs-actions > *,
+	.gs-deployments td.gs-actions .button {
+		box-sizing: border-box;
+		width: 100%;
+		text-align: center;
+	}
+
+	.gs-form .form-table th label {
+		display: inline-block;
+		margin-bottom: 0;
+	}
+
+	.gs-form .form-table input.regular-text,
+	.gs-form .gs-code-input,
+	.gs-form--dense .form-table input[type="number"] {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	/* Stacked actions: readable tap targets in one column. */
+	.gs-actions .button,
+	.gs-actionbar .button,
+	.gs-status-line__actions .button {
+		justify-content: center;
+		width: 100%;
+		text-align: center;
+	}
+
+	.gs-actions .gs-inline,
+	.gs-actionbar .gs-inline,
+	.gs-status-line__actions .gs-inline {
+		display: block;
+		width: 100%;
+	}
+
+	.gs-inline + .gs-inline {
+		margin-left: 0;
+	}
+
+	.gs-checkbar__form .button {
+		width: 100%;
+	}
+
+	/* Dashboard tables: one record per card instead of a squeezed grid. */
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) {
+		min-width: 0;
+		border: 0;
+		background: none;
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) thead {
+		display: none;
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) tbody,
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) tr,
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) td {
+		display: block;
+		width: auto;
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) tr {
+		margin-bottom: var(--gs-space-3);
+		padding: var(--gs-space-3) var(--gs-space-4);
+		border: 1px solid var(--gs-color-border);
+		border-radius: var(--gs-radius);
+		background: var(--gs-color-white);
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) td,
+	.gs-table.striped:not(.gs-deployments):not(.gs-checks):not(.gs-log) tr:nth-child(odd) td {
+		padding: 0 0 var(--gs-space-1);
+		border: 0;
+		background: none;
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) td:last-child {
+		padding-bottom: 0;
+	}
+
+	.gs-table:not(.gs-deployments):not(.gs-checks):not(.gs-log) td[data-gs-label]::before {
+		content: attr(data-gs-label);
+		display: block;
+		color: var(--gs-color-text-muted);
+		font-size: var(--gs-font-size-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+
+	/* Copy rows: the button narrows so the value keeps the room. */
+	.gs-copy-field__row input {
+		width: 100%;
+	}
+
+	.gs-copy-field__row .gs-copy {
+		padding-right: var(--gs-space-2);
+		padding-left: var(--gs-space-2);
+	}
+
+	.gs-carousel__nav-prev,
+	.gs-carousel__nav-next {
+		flex: 1 1 0;
+		text-align: center;
 	}
 }

@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="wrap gs-wrap">
 	<h1 class="gs-title"><?php esc_html_e( 'Tools & Diagnostics', 'githubsync' ); ?></h1>
 
+	<div class="gs-table-wrap">
 	<table class="widefat striped gs-table gs-checks">
 		<thead>
 			<tr>
@@ -24,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 			<?php foreach ( $data['checks'] as $gs_check ) : ?>
 				<tr>
 					<td><?php echo esc_html( $gs_check['label'] ); ?></td>
-					<td><code class="gs-break"><?php echo esc_html( (string) $gs_check['value'] ); ?></code></td>
+					<td><code class="gs-path-soft gs-check-value"><?php echo esc_html( (string) $gs_check['value'] ); ?></code></td>
 					<td>
 						<span class="gs-badge gs-badge--<?php echo $gs_check['ok'] ? 'success' : 'error'; ?>">
 							<?php echo $gs_check['ok'] ? esc_html__( 'OK', 'githubsync' ) : esc_html__( 'Attention', 'githubsync' ); ?>
@@ -35,16 +36,19 @@ defined( 'ABSPATH' ) || exit;
 			<?php endforeach; ?>
 		</tbody>
 	</table>
+	</div>
 
-	<div class="gs-grid">
-		<div class="gs-card">
+	<div class="gs-columns">
+		<div class="gs-card gs-card--side">
 			<h2><?php esc_html_e( 'Storage', 'githubsync' ); ?></h2>
-			<p><?php esc_html_e( 'Backups:', 'githubsync' ); ?> <strong><?php echo esc_html( $data['backup_usage'] ); ?></strong></p>
-			<p><?php esc_html_e( 'Log entries:', 'githubsync' ); ?> <strong><?php echo esc_html( (string) $data['log_count'] ); ?></strong></p>
+			<ul class="gs-facts">
+				<li><span><?php esc_html_e( 'Backups', 'githubsync' ); ?></span> <strong><?php echo esc_html( $data['backup_usage'] ); ?></strong></li>
+				<li><span><?php esc_html_e( 'Log entries', 'githubsync' ); ?></span> <strong><?php echo esc_html( (string) $data['log_count'] ); ?></strong></li>
+			</ul>
 			<p class="gs-muted gs-break"><?php echo esc_html( $data['work_dir'] ); ?></p>
 		</div>
 
-		<div class="gs-card gs-card--wide">
+		<div class="gs-card">
 			<h2><?php esc_html_e( 'Maintenance', 'githubsync' ); ?></h2>
 
 			<div class="gs-actionbar">
@@ -60,7 +64,15 @@ defined( 'ABSPATH' ) || exit;
 					<button type="submit" class="button"><?php esc_html_e( 'Prune old backups', 'githubsync' ); ?></button>
 				</form>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline" onsubmit="return confirm('<?php echo esc_js( __( 'Delete all deployment logs?', 'githubsync' ) ); ?>');">
+				<form
+					method="post"
+					action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+					class="gs-inline"
+					data-gs-confirm="<?php esc_attr_e( 'Delete all deployment logs?', 'githubsync' ); ?>"
+					data-gs-confirm-text="<?php esc_attr_e( 'Every log entry is removed permanently. Deployment configurations, backups and deployment history are not affected.', 'githubsync' ); ?>"
+					data-gs-confirm-ok="<?php esc_attr_e( 'Clear logs', 'githubsync' ); ?>"
+					data-gs-confirm-danger="1"
+				>
 					<?php wp_nonce_field( 'githubsync_clear_logs' ); ?>
 					<input type="hidden" name="action" value="githubsync_clear_logs">
 					<button type="submit" class="button gs-danger"><?php esc_html_e( 'Clear logs', 'githubsync' ); ?></button>

@@ -6,7 +6,38 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
-Nothing yet.
+## [0.1.8] - 2026-11-25
+
+### Changed
+
+- **Every admin screen has been redesigned on one visual system.** The stylesheet
+  is now a small, documented design system built on the WordPress admin colours
+  and spacing, with a single set of tokens at the top of `admin.css`. Cards,
+  tables, forms, notices, badges, empty states and dialogs all use it, so the
+  Dashboard, Deployments, Add/Edit Deployment, Deployment detail, History,
+  Connection, Settings and Tools screens look and behave the same way. No new
+  dependencies and no build step were added; the plugin still needs only PHP 7.4
+  and WordPress 6.2.
+- **Layouts adapt to the screen.** On narrow screens the form tables stack each
+  label above its field, buttons in action rows become full-width tap targets,
+  and the deployment and activity tables turn into one labelled card per row
+  instead of scrolling sideways. The wide diagnostics and log tables scroll in
+  their own container.
+
+### Added
+
+- **Destructive actions ask first, in a proper dialog.** Deleting a deployment
+  configuration, rolling back, generating a new webhook secret, clearing logs and
+  disconnecting GitHub now open an accessible confirmation dialog that names the
+  action and explains what is kept. The dialog's button labels are translated
+  (`githubSyncL10n`).
+- Copy buttons on the webhook URL and secret report "Copied" when the value has
+  been copied.
+
+### Notes
+
+- Only the admin interface changed. Deployments, settings, stored credentials and
+  the deployment history are untouched, and no database changes were made.
 
 ## [0.1.7] - 2026-11-24
 

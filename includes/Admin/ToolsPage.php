@@ -38,10 +38,10 @@ final class ToolsPage {
 
 		$checks = array(
 			array(
-				'label'  => __( 'PHP version', 'githubsync' ),
-				'value'  => PHP_VERSION,
-				'ok'     => version_compare( PHP_VERSION, GITHUBSYNC_MIN_PHP, '>=' ),
-				'help'   => sprintf( /* translators: %s: version. */ __( 'GitHubSync requires PHP %s or newer.', 'githubsync' ), GITHUBSYNC_MIN_PHP ),
+				'label' => __( 'PHP version', 'githubsync' ),
+				'value' => PHP_VERSION,
+				'ok'    => version_compare( PHP_VERSION, GITHUBSYNC_MIN_PHP, '>=' ),
+				'help'  => sprintf( /* translators: %s: version. */ __( 'GitHubSync requires PHP %s or newer.', 'githubsync' ), GITHUBSYNC_MIN_PHP ),
 			),
 			array(
 				'label' => __( 'WordPress version', 'githubsync' ),

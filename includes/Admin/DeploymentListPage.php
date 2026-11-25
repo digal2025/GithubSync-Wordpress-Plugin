@@ -32,7 +32,7 @@ final class DeploymentListPage {
 		$rows = $deployments->all();
 
 		foreach ( $rows as $index => $row ) {
-			$recent                = $jobs->recent( (int) $row['id'], 1 );
+			$recent                     = $jobs->recent( (int) $row['id'], 1 );
 			$rows[ $index ]['last_job'] = $recent ? $recent[0] : null;
 		}
 

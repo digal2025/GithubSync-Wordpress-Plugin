@@ -13,11 +13,19 @@ $gs_settings = $data['settings'];
 <div class="wrap gs-wrap">
 	<h1 class="gs-title"><?php esc_html_e( 'GitHubSync Settings', 'githubsync' ); ?></h1>
 
-	<div class="gs-card <?php echo $data['encryption_ok'] ? 'gs-card--ok' : 'gs-card--bad'; ?>">
+	<?php
+	\GitHubSync\Admin\AdminMenu::notice(
+		$data['encryption_ok'] ? 'success' : 'error',
+		$data['encryption_ok']
+			? __( '<strong>Credential encryption is on.</strong> A site key is available, so GitHub credentials are encrypted at rest with authenticated encryption.', 'githubsync' )
+			: __( '<strong>Credential encryption is off.</strong> No key is configured, so nothing will be stored until one exists. There is no plaintext fallback.', 'githubsync' )
+	);
+	?>
+
+	<div class="gs-card gs-settings">
 		<h2><?php esc_html_e( 'Credential encryption', 'githubsync' ); ?></h2>
 
 		<?php if ( $data['encryption_ok'] ) : ?>
-			<p class="gs-ok"><?php esc_html_e( 'A site key is available. Credentials are encrypted at rest with authenticated encryption.', 'githubsync' ); ?></p>
 			<p class="gs-muted">
 				<?php if ( $data['has_constant'] ) : ?>
 					<?php esc_html_e( 'Key source: GITHUBSYNC_ENCRYPTION_KEY constant in wp-config.php.', 'githubsync' ); ?>
@@ -32,19 +40,22 @@ $gs_settings = $data['settings'];
 				<?php endif; ?>
 			</p>
 		<?php else : ?>
-			<p class="gs-bad"><?php esc_html_e( 'No key is configured. Nothing will be stored until one exists — there is no plaintext fallback.', 'githubsync' ); ?></p>
-			<p><?php esc_html_e( 'Option A: let GitHubSync create a key file outside the web root.', 'githubsync' ); ?></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<p><strong><?php esc_html_e( 'Option A:', 'githubsync' ); ?></strong> <?php esc_html_e( 'let GitHubSync create a key file outside the web root.', 'githubsync' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form">
 				<?php wp_nonce_field( 'githubsync_generate_key' ); ?>
 				<input type="hidden" name="action" value="githubsync_generate_key">
 				<button type="submit" class="button button-primary"><?php esc_html_e( 'Generate key file', 'githubsync' ); ?></button>
 			</form>
-			<p><?php esc_html_e( 'Option B: add a constant to wp-config.php using a 32-byte base64 key:', 'githubsync' ); ?></p>
+			<p><strong><?php esc_html_e( 'Option B:', 'githubsync' ); ?></strong> <?php esc_html_e( 'add a constant to wp-config.php using a 32-byte base64 key:', 'githubsync' ); ?></p>
 			<pre class="gs-code">define( 'GITHUBSYNC_ENCRYPTION_KEY', 'base64-of-32-random-bytes' );</pre>
 		<?php endif; ?>
 	</div>
 
-	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form">
+	<div class="gs-card gs-settings">
+		<h2><?php esc_html_e( 'Limits and retention', 'githubsync' ); ?></h2>
+		<p class="gs-muted"><?php esc_html_e( 'These limits protect the server from very large or unusual deployments. The defaults suit most sites.', 'githubsync' ); ?></p>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form gs-form--dense">
 		<?php wp_nonce_field( 'githubsync_save_settings' ); ?>
 		<input type="hidden" name="action" value="githubsync_save_settings">
 
@@ -95,4 +106,5 @@ $gs_settings = $data['settings'];
 
 		<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save settings', 'githubsync' ); ?></button></p>
 	</form>
+	</div>
 </div>

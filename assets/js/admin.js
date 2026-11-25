@@ -1,32 +1,277 @@
 /**
  * GitHubSync admin behaviour.
  *
- * Adds copy buttons next to read-only webhook fields, drives the setup
- * checklist carousel, and opens it in a modal dialog. All server-side
- * validation and authorisation happens in PHP; this is convenience only.
+ * Progressive enhancement only: every screen works without this file.
+ *
+ *  1. Dialogs     - [data-gs-dialog-open="id"] opens <dialog id="id">.
+ *  2. Confirmations - [data-gs-confirm] on a form asks before submitting.
+ *  3. Copy buttons - [data-gs-copy] copies its target's value.
+ *  4. Carousel    - the setup checklist steps.
+ *
+ * All server-side validation and authorisation happens in PHP.
  */
 (function () {
 	'use strict';
 
-	function copyText(value) {
-		if (navigator.clipboard && navigator.clipboard.writeText) {
-			return navigator.clipboard.writeText(value);
+	var l10n = window.githubSyncL10n || {};
+
+	/**
+	 * Translated UI string.
+	 *
+	 * @param {string} key  String key.
+	 * @param {string} fall Backend fallback.
+	 * @return {string} Localised text.
+	 */
+	function t(key, fall) {
+		return l10n[key] || fall;
+	}
+
+	/**
+	 * Open a dialog and keep focus inside it.
+	 *
+	 * @param {HTMLDialogElement} dialog Dialog element.
+	 */
+	function openDialog(dialog) {
+		if (typeof dialog.showModal !== 'function') {
+			return;
 		}
 
-		var area = document.createElement('textarea');
+		if ( ! dialog.open) {
+			dialog.showModal();
+		}
+
+		var target = dialog.querySelector( '[data-gs-slide]:not([hidden]) a, [data-gs-slide]:not([hidden]) button' );
+
+		if ( ! target) {
+			target = dialog.querySelector( '.gs-dialog__x' );
+		}
+
+		if (target) {
+			target.focus();
+		}
+	}
+
+	/**
+	 * Wire closing behaviour for one dialog.
+	 *
+	 * @param {HTMLDialogElement} dialog Dialog element.
+	 * @param {Element|null}      trigger Button that opened it, if any.
+	 */
+	function bindDialog(dialog, trigger) {
+		Array.prototype.forEach.call(
+			dialog.querySelectorAll( '[data-gs-dialog-close]' ),
+			function (button) {
+				button.addEventListener(
+					'click',
+					function () {
+						dialog.close();
+					}
+				);
+			}
+		);
+
+		dialog.addEventListener(
+			'click',
+			function (event) {
+				// Clicking the backdrop closes; clicks inside the panel do not.
+				if (event.target === dialog) {
+					dialog.close();
+				}
+			}
+		);
+
+		if (trigger) {
+			dialog.addEventListener(
+				'close',
+				function () {
+					trigger.focus();
+				}
+			);
+		}
+	}
+
+	/** Dialogs opened from a trigger button. */
+	function initDialogs() {
+		Array.prototype.forEach.call(
+			document.querySelectorAll( '[data-gs-dialog-open]' ),
+			function (trigger) {
+				var id     = trigger.getAttribute( 'data-gs-dialog-open' );
+				var dialog = id ? document.getElementById( id ) : null;
+
+				if ( ! dialog) {
+					return;
+				}
+
+				bindDialog( dialog, trigger );
+
+				trigger.addEventListener(
+					'click',
+					function () {
+						openDialog( dialog );
+					}
+				);
+			}
+		);
+	}
+
+	/** One shared confirmation dialog for destructive forms. */
+	function initConfirmations() {
+		var forms = document.querySelectorAll( 'form[data-gs-confirm]' );
+
+		if ( ! forms.length || ! window.HTMLDialogElement ) {
+			// Without <dialog> support the form simply submits; PHP still guards it.
+			return;
+		}
+
+		var dialog = document.createElement( 'dialog' );
+		dialog.className = 'gs-dialog gs-dialog--confirm';
+		dialog.setAttribute( 'aria-labelledby', 'gs-confirm-title' );
+		dialog.setAttribute( 'aria-describedby', 'gs-confirm-text' );
+		dialog.innerHTML =
+			'<div class="gs-dialog__inner">' +
+				'<div class="gs-dialog__head">' +
+					'<div class="gs-dialog__title">' +
+						'<h2 id="gs-confirm-title"></h2>' +
+					'</div>' +
+					'<button type="button" class="gs-dialog__x" data-gs-dialog-close aria-label="' + t( 'cancel', 'Cancel' ) + '">' +
+						'<span aria-hidden="true">&times;</span>' +
+					'</button>' +
+				'</div>' +
+				'<p id="gs-confirm-text" class="gs-confirm__text"></p>' +
+				'<div class="gs-dialog__foot">' +
+					'<button type="button" class="button" data-gs-dialog-close>' + t( 'cancel', 'Cancel' ) + '</button>' +
+					'<button type="button" class="button button-primary gs-confirm__ok"></button>' +
+				'</div>' +
+			'</div>';
+
+		document.body.appendChild( dialog );
+
+		var titleEl  = dialog.querySelector( '#gs-confirm-title' );
+		var textEl   = dialog.querySelector( '.gs-confirm__text' );
+		var okButton = dialog.querySelector( '.gs-confirm__ok' );
+		var pending  = null;
+
+		bindDialog( dialog, null );
+
+		okButton.addEventListener(
+			'click',
+			function () {
+				var form = pending;
+				pending  = null;
+				dialog.close();
+
+				if (form) {
+					form.submit();
+				}
+			}
+		);
+
+		Array.prototype.forEach.call(
+			forms,
+			function (form) {
+				form.addEventListener(
+					'submit',
+					function (event) {
+						if (form.getAttribute( 'data-gs-confirmed' ) === '1') {
+							// Already confirmed once; let the native submit through.
+							form.removeAttribute( 'data-gs-confirmed' );
+							return;
+						}
+
+						event.preventDefault();
+						pending = form;
+
+						titleEl.textContent = form.getAttribute( 'data-gs-confirm' );
+						textEl.textContent  = form.getAttribute( 'data-gs-confirm-text' ) || form.getAttribute( 'data-gs-confirm' );
+						okButton.textContent = form.getAttribute( 'data-gs-confirm-ok' ) || t( 'continue', 'Continue' );
+						okButton.className   = form.getAttribute( 'data-gs-confirm-danger' ) === '1'
+							? 'button button-primary gs-confirm__ok gs-danger'
+							: 'button button-primary gs-confirm__ok';
+
+						openDialog( dialog );
+						okButton.focus();
+					}
+				);
+			}
+		);
+	}
+
+	/**
+	 * Write text to the clipboard.
+	 *
+	 * @param {string} value Text to copy.
+	 * @return {Promise} Resolves when the copy attempt finished.
+	 */
+	function copyText(value) {
+		if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+			return navigator.clipboard.writeText( value ).catch(
+				function () {
+					legacyCopy( value );
+				}
+			);
+		}
+
+		legacyCopy( value );
+		return Promise.resolve();
+	}
+
+	/**
+	 * Clipboard fallback for insecure contexts.
+	 *
+	 * @param {string} value Text to copy.
+	 */
+	function legacyCopy(value) {
+		var area   = document.createElement( 'textarea' );
 		area.value = value;
-		area.setAttribute('readonly', 'readonly');
+		area.setAttribute( 'readonly', 'readonly' );
 		area.style.position = 'absolute';
-		area.style.left = '-9999px';
-		document.body.appendChild(area);
+		area.style.left     = '-9999px';
+		document.body.appendChild( area );
 		area.select();
+
 		try {
-			document.execCommand('copy');
+			document.execCommand( 'copy' );
 		} catch (e) {
 			// Clipboard unavailable; the field is still selectable.
 		}
-		document.body.removeChild(area);
-		return Promise.resolve();
+
+		document.body.removeChild( area );
+	}
+
+	/** Copy buttons on read-only fields. */
+	function initCopyButtons() {
+		Array.prototype.forEach.call(
+			document.querySelectorAll( '[data-gs-copy]' ),
+			function (button) {
+				var selector = button.getAttribute( 'data-gs-copy' );
+				var field    = selector ? document.querySelector( selector ) : null;
+
+				if ( ! field) {
+					return;
+				}
+
+				button.addEventListener(
+					'click',
+					function () {
+						var original = button.getAttribute( 'data-gs-copy-idle' ) || button.textContent;
+
+						button.setAttribute( 'data-gs-copy-idle', original );
+
+						copyText( field.value ).then(
+							function () {
+								button.textContent = button.getAttribute( 'data-gs-copy-done' ) || t( 'copied', 'Copied' );
+								window.setTimeout(
+									function () {
+										button.textContent = original;
+									},
+									1500
+								);
+							}
+						);
+					}
+				);
+			}
+		);
 	}
 
 	/**
@@ -34,41 +279,49 @@
 	 *
 	 * Each slide carries its own state in the DOM; only visibility and the
 	 * current index are managed here. No server data is read or written.
+	 *
+	 * @param {Element} root Carousel root element.
 	 */
 	function initCarousel(root) {
-		var slides = root.querySelectorAll('[data-gs-slide]');
-		var dots = root.querySelectorAll('[data-gs-goto]');
-		var prev = root.querySelector('[data-gs-prev]');
-		var next = root.querySelector('[data-gs-next]');
-		var counter = root.querySelector('[data-gs-counter]');
-		var total = slides.length;
-		var current = parseInt(root.getAttribute('data-gs-current'), 10);
+		var slides  = root.querySelectorAll( '[data-gs-slide]' );
+		var dots    = root.querySelectorAll( '[data-gs-goto]' );
+		var prev    = root.querySelector( '[data-gs-prev]' );
+		var next    = root.querySelector( '[data-gs-next]' );
+		var counter = root.querySelector( '[data-gs-counter]' );
+		var total   = slides.length;
+		var current = parseInt( root.getAttribute( 'data-gs-current' ), 10 );
 
-		if (!total) {
+		if ( ! total) {
 			return;
 		}
 
-		if (isNaN(current) || current < 0 || current >= total) {
+		if (isNaN( current ) || current < 0 || current >= total) {
 			current = 0;
 		}
 
 		function show(index) {
-			current = Math.max(0, Math.min(total - 1, index));
+			current = Math.max( 0, Math.min( total - 1, index ) );
 
-			Array.prototype.forEach.call(slides, function (slide, i) {
-				if (i === current) {
-					slide.removeAttribute('hidden');
-				} else {
-					slide.setAttribute('hidden', 'hidden');
+			Array.prototype.forEach.call(
+				slides,
+				function (slide, i) {
+					if (i === current) {
+						slide.removeAttribute( 'hidden' );
+					} else {
+						slide.setAttribute( 'hidden', 'hidden' );
+					}
 				}
-			});
+			);
 
-			Array.prototype.forEach.call(dots, function (dot, i) {
-				dot.setAttribute('aria-selected', i === current ? 'true' : 'false');
-			});
+			Array.prototype.forEach.call(
+				dots,
+				function (dot, i) {
+					dot.setAttribute( 'aria-selected', i === current ? 'true' : 'false' );
+				}
+			);
 
 			if (prev) {
-				prev.disabled = current === 0;
+				prev.disabled = 0 === current;
 			}
 
 			if (next) {
@@ -81,103 +334,57 @@
 		}
 
 		if (prev) {
-			prev.addEventListener('click', function () {
-				show(current - 1);
-			});
+			prev.addEventListener(
+				'click',
+				function () {
+					show( current - 1 );
+				}
+			);
 		}
 
 		if (next) {
-			next.addEventListener('click', function () {
-				show(current + 1);
-			});
+			next.addEventListener(
+				'click',
+				function () {
+					show( current + 1 );
+				}
+			);
 		}
 
-		Array.prototype.forEach.call(dots, function (dot) {
-			dot.addEventListener('click', function () {
-				show(parseInt(dot.getAttribute('data-gs-goto'), 10));
-			});
-		});
-
-		root.addEventListener('keydown', function (event) {
-			if (event.key === 'ArrowLeft') {
-				show(current - 1);
-			} else if (event.key === 'ArrowRight') {
-				show(current + 1);
+		Array.prototype.forEach.call(
+			dots,
+			function (dot) {
+				dot.addEventListener(
+					'click',
+					function () {
+						show( parseInt( dot.getAttribute( 'data-gs-goto' ), 10 ) );
+					}
+				);
 			}
-		});
+		);
 
-		show(current);
+		root.addEventListener(
+			'keydown',
+			function (event) {
+				if ('ArrowLeft' === event.key) {
+					show( current - 1 );
+				} else if ('ArrowRight' === event.key) {
+					show( current + 1 );
+				}
+			}
+		);
+
+		show( current );
 	}
 
-	/**
-	 * Setup checklist dialog.
-	 *
-	 * Opens the <dialog> from any [data-gs-dialog-open] button and keeps the
-	 * focus inside it. Closing is presentation only; whether the checklist may
-	 * be marked closed is decided in PHP.
-	 */
-	function initDialog() {
-		var dialog = document.getElementById('gs-setup-checklist');
-		var trigger = document.querySelector('[data-gs-dialog-open="gs-setup-checklist"]');
+	document.addEventListener(
+		'DOMContentLoaded',
+		function () {
+			initDialogs();
+			initConfirmations();
+			initCopyButtons();
 
-		if (!dialog || !trigger || typeof dialog.showModal !== 'function') {
-			return;
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-gs-carousel]' ), initCarousel );
 		}
-
-		trigger.addEventListener('click', function () {
-			if (!dialog.open) {
-				dialog.showModal();
-			}
-			var slide = dialog.querySelector('[data-gs-slide]:not([hidden]) a, [data-gs-slide]:not([hidden]) button');
-			if (slide) {
-				slide.focus();
-			}
-		});
-
-		Array.prototype.forEach.call(dialog.querySelectorAll('[data-gs-dialog-close]'), function (button) {
-			button.addEventListener('click', function () {
-				dialog.close();
-			});
-		});
-
-		dialog.addEventListener('click', function (event) {
-			// Clicking the background closes; clicks inside the panel do not.
-			if (event.target === dialog) {
-				dialog.close();
-			}
-		});
-
-		dialog.addEventListener('close', function () {
-			trigger.focus();
-		});
-	}
-
-	document.addEventListener('DOMContentLoaded', function () {
-		Array.prototype.forEach.call(document.querySelectorAll('[data-gs-carousel]'), initCarousel);
-		initDialog();
-
-		var fields = document.querySelectorAll('input[readonly][type="text"]');
-
-		Array.prototype.forEach.call(fields, function (field) {
-			var button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'button button-small';
-			button.textContent = 'Copy';
-			button.style.marginLeft = '6px';
-
-			button.addEventListener('click', function () {
-				copyText(field.value).then(function () {
-					var original = button.textContent;
-					button.textContent = 'Copied';
-					window.setTimeout(function () {
-						button.textContent = original;
-					}, 1500);
-				});
-			});
-
-			if (field.parentNode) {
-				field.parentNode.insertBefore(button, field.nextSibling);
-			}
-		});
-	});
+	);
 }());

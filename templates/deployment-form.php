@@ -24,10 +24,10 @@ $gs_adopt  = $gs_is_new ? 0 : (int) $gs_row['adopt_existing'];
 
 $gs_repo_error = isset( $data['repo_error'] ) ? (string) $data['repo_error'] : '';
 
-$gs_meta   = isset( $data['repo_meta'] ) && is_array( $data['repo_meta'] ) ? $data['repo_meta'] : null;
+$gs_meta    = isset( $data['repo_meta'] ) && is_array( $data['repo_meta'] ) ? $data['repo_meta'] : null;
 $gs_suggest = array(
-	'fields'            => array(),
-	'slug_deployed'     => false,
+	'fields'        => array(),
+	'slug_deployed' => false,
 );
 
 if ( '' !== $gs_repo && ( null !== $gs_meta || ! empty( $data['branches'] ) ) ) {
@@ -75,19 +75,16 @@ $gs_reason = static function ( array $suggest, $field ) {
 	<?php endif; ?>
 
 	<?php if ( $gs_is_new ) : ?>
-		<div class="gs-card">
-			<p><strong><?php esc_html_e( 'How to fill this in', 'githubsync' ); ?></strong></p>
-			<p class="description">
-				<?php esc_html_e( 'Four fields decide where the code comes from and where it goes: Repository, Branch, Source path and Destination folder. The rest is optional tuning.', 'githubsync' ); ?>
-			</p>
-			<ol class="description">
-				<li><?php esc_html_e( 'Repository: type owner/name exactly as it appears in the GitHub URL, for example digal2025/GithubSync-Wordpress-Plugin.', 'githubsync' ); ?></li>
-				<li><?php esc_html_e( 'Branch: the branch you actually push to. Check it on GitHub; do not assume main.', 'githubsync' ); ?></li>
-				<li><?php esc_html_e( 'Source path: leave empty if the plugin or theme is the repository root, otherwise the subfolder that contains the code.', 'githubsync' ); ?></li>
-				<li><?php esc_html_e( 'Deployment type plus Destination folder: together they choose the target directory. A folder that already holds files is only accepted once you tick "Adopt an existing destination directory".', 'githubsync' ); ?></li>
-			</ol>
-			<p class="description">
-				<?php esc_html_e( 'GitHub can answer the first three. Add the repository to the URL as ?gs_repo=owner/name, or open it from Browse repositories, and the branch, source path and destination folder are filled in from that repository. Everything else is your choice: GitHub does not know whether the code is a plugin, a theme or a static site.', 'githubsync' ); ?>
+		<div class="gs-card gs-help">
+			<h2 class="gs-help__title"><?php esc_html_e( 'Filling this in', 'githubsync' ); ?></h2>
+			<ul class="gs-help__list">
+				<li><strong><?php esc_html_e( 'Repository', 'githubsync' ); ?></strong> <?php esc_html_e( '— owner/name, exactly as in the GitHub URL.', 'githubsync' ); ?></li>
+				<li><strong><?php esc_html_e( 'Branch', 'githubsync' ); ?></strong> <?php esc_html_e( '— the branch you push to. Check it on GitHub rather than assuming main.', 'githubsync' ); ?></li>
+				<li><strong><?php esc_html_e( 'Source path', 'githubsync' ); ?></strong> <?php esc_html_e( '— empty when the code is at the repository root, otherwise the subfolder that holds it.', 'githubsync' ); ?></li>
+				<li><strong><?php esc_html_e( 'Destination', 'githubsync' ); ?></strong> <?php esc_html_e( '— the type and folder name decide where files land. Tick "Adopt an existing destination" to reuse a folder that already has files.', 'githubsync' ); ?></li>
+			</ul>
+			<p class="gs-help__note">
+				<?php esc_html_e( 'Open the form with ?gs_repo=owner/name or from Browse repositories and GitHub fills in the branch, source path and folder for you.', 'githubsync' ); ?>
 			</p>
 		</div>
 	<?php endif; ?>
@@ -114,7 +111,7 @@ $gs_reason = static function ( array $suggest, $field ) {
 						/* translators: 1: repository full name, 2: visibility (private or public). */
 						esc_html__( 'Prefilled from GitHub: %1$s (%2$s). Check every value before saving; you can overwrite any of them.', 'githubsync' ),
 						'<code>' . esc_html( (string) $gs_meta['full_name'] ) . '</code>',
-						esc_html( ! empty( $gs_meta['private'] ) ? __( 'private', 'githubsync' ) : __( 'public', 'githubsync' ) )
+						esc_html( ! empty( $gs_meta['private'] ) ? esc_html__( 'private', 'githubsync' ) : esc_html__( 'public', 'githubsync' ) )
 					);
 					?>
 				</p>
@@ -249,7 +246,7 @@ $gs_reason = static function ( array $suggest, $field ) {
 			<tr>
 				<th scope="row"><label for="gs-excl"><?php esc_html_e( 'Exclude patterns', 'githubsync' ); ?></label></th>
 				<td>
-					<textarea id="gs-excl" name="exclude_patterns" rows="6" class="large-text code" placeholder="docs/**&#10;*.md"><?php echo esc_textarea( $gs_excl ); ?></textarea>
+					<textarea id="gs-excl" name="exclude_patterns" rows="4" class="large-text code gs-code-input" placeholder="docs/**&#10;*.md"><?php echo esc_textarea( $gs_excl ); ?></textarea>
 					<p class="description">
 						<?php esc_html_e( 'Optional. One glob per line, for files in the repository that should not be copied to this site, for example docs/** or *.md. * matches within a folder, ** matches across folders. Leave empty to deploy everything. Protected files (.git, .github, .env, wp-config.php, key and certificate files) are always excluded and cannot be re-included.', 'githubsync' ); ?>
 					</p>
@@ -259,12 +256,18 @@ $gs_reason = static function ( array $suggest, $field ) {
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Behaviour', 'githubsync' ); ?></th>
 				<td>
-					<label><input type="checkbox" name="auto_deploy" value="1" <?php checked( $gs_auto, 1 ); ?>> <?php esc_html_e( 'Deploy automatically on push to this branch', 'githubsync' ); ?></label>
-					<p class="description gs-hint"><?php esc_html_e( 'A webhook delivery for this repository and branch starts a deployment without anyone logged in. Leave unticked to deploy only when you press the button.', 'githubsync' ); ?></p>
-					<label><input type="checkbox" name="manual_deploy" value="1" <?php checked( $gs_manual, 1 ); ?>> <?php esc_html_e( 'Allow manual deployment from the dashboard', 'githubsync' ); ?></label>
-					<p class="description gs-hint"><?php esc_html_e( 'Shows a Deploy button for this deployment, which deploys the configured branch on demand.', 'githubsync' ); ?></p>
-					<label><input type="checkbox" name="adopt_existing" value="1" <?php checked( $gs_adopt, 1 ); ?>> <?php esc_html_e( 'Adopt an existing destination directory (required if it already contains files)', 'githubsync' ); ?></label>
-					<p class="description gs-hint"><?php esc_html_e( 'Tick this when the destination folder already exists on this site, for example an existing plugin you now want managed by GitHub. Untick it for a fresh, empty destination. A folder that already holds files is refused unless this is ticked.', 'githubsync' ); ?></p>
+					<div class="gs-check-group">
+						<label><input type="checkbox" name="auto_deploy" value="1" <?php checked( $gs_auto, 1 ); ?>> <?php esc_html_e( 'Deploy automatically on push to this branch', 'githubsync' ); ?></label>
+						<p class="description gs-hint"><?php esc_html_e( 'A webhook delivery for this repository and branch starts a deployment without anyone logged in. Leave unticked to deploy only when you press the button.', 'githubsync' ); ?></p>
+					</div>
+					<div class="gs-check-group">
+						<label><input type="checkbox" name="manual_deploy" value="1" <?php checked( $gs_manual, 1 ); ?>> <?php esc_html_e( 'Allow manual deployment from the dashboard', 'githubsync' ); ?></label>
+						<p class="description gs-hint"><?php esc_html_e( 'Shows a Deploy button for this deployment, which deploys the configured branch on demand.', 'githubsync' ); ?></p>
+					</div>
+					<div class="gs-check-group">
+						<label><input type="checkbox" name="adopt_existing" value="1" <?php checked( $gs_adopt, 1 ); ?>> <?php esc_html_e( 'Adopt an existing destination directory (required if it already contains files)', 'githubsync' ); ?></label>
+						<p class="description gs-hint"><?php esc_html_e( 'Tick this when the destination folder already exists on this site, for example an existing plugin you now want managed by GitHub. Untick it for a fresh, empty destination. A folder that already holds files is refused unless this is ticked.', 'githubsync' ); ?></p>
+					</div>
 					<p class="description gs-warn"><?php esc_html_e( 'Deployment replaces files in the destination. Files excluded by policy are preserved. There is no database migration.', 'githubsync' ); ?></p>
 				</td>
 			</tr>

@@ -33,9 +33,9 @@ final class ConnectionPage {
 
 		$auth = new GitHubAuth();
 
-		$browse  = isset( $_GET['browse'] ) && '1' === $_GET['browse']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$paged   = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$repos   = array();
+		$browse   = isset( $_GET['browse'] ) && '1' === $_GET['browse']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$paged    = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$repos    = array();
 		$has_next = false;
 		$error    = '';
 
@@ -59,24 +59,31 @@ final class ConnectionPage {
 					} else {
 						$repos    = $result['items'];
 						$has_next = $result['has_next'];
-						set_transient( $cache_key, array( 'items' => $repos, 'has_next' => $has_next ), 5 * MINUTE_IN_SECONDS );
+						set_transient(
+							$cache_key,
+							array(
+								'items'    => $repos,
+								'has_next' => $has_next,
+							),
+							5 * MINUTE_IN_SECONDS
+						);
 					}
 				}
 			}
 		}
 
 		$data = array(
-			'connected'      => $auth->is_connected(),
-			'connection'     => $auth->connection(),
-			'summary'        => $auth->summary(),
-			'encryption_ok'  => CredentialVault::is_configured(),
-			'browse'         => $browse,
-			'paged'          => $paged,
-			'repos'          => $repos,
-			'has_next'       => $has_next,
-			'error'          => $error,
-			'browse_url'     => wp_nonce_url( admin_url( 'admin.php?page=githubsync-connection&browse=1' ), 'githubsync_browse' ),
-			'manifest'       => self::manifest_data( $auth, $callback ),
+			'connected'     => $auth->is_connected(),
+			'connection'    => $auth->connection(),
+			'summary'       => $auth->summary(),
+			'encryption_ok' => CredentialVault::is_configured(),
+			'browse'        => $browse,
+			'paged'         => $paged,
+			'repos'         => $repos,
+			'has_next'      => $has_next,
+			'error'         => $error,
+			'browse_url'    => wp_nonce_url( admin_url( 'admin.php?page=githubsync-connection&browse=1' ), 'githubsync_browse' ),
+			'manifest'      => self::manifest_data( $auth, $callback ),
 		);
 
 		include GITHUBSYNC_DIR . 'templates/connection.php';
@@ -88,8 +95,8 @@ final class ConnectionPage {
 	 * The installation list needs a live GitHub call with an App JWT, so it is
 	 * only fetched when an App is stored and not yet installed.
 	 *
-	 * @param GitHubAuth  $auth     Auth instance.
-	 * @param array|null  $callback Outcome of a GitHub callback on this page.
+	 * @param GitHubAuth $auth     Auth instance.
+	 * @param array|null $callback Outcome of a GitHub callback on this page.
 	 * @return array
 	 */
 	private static function manifest_data( GitHubAuth $auth, $callback = null ) {

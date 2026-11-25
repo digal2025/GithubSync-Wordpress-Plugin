@@ -36,13 +36,13 @@ $gs_connected = ! empty( $data['connected'] );
 	$gs_closed   = ! empty( $data['dismissed'] );
 	?>
 
-	<div class="gs-checklist-bar">
-		<?php if ( $gs_closed || $gs_total === 0 ) : ?>
+	<div class="gs-checkbar">
+		<?php if ( $gs_closed || 0 === $gs_total ) : ?>
 			<?php
 			// Nothing to open: the checklist is closed or there is no step data.
 			if ( $gs_closed ) :
 				?>
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-checklist-bar__form">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-checkbar__form">
 					<?php wp_nonce_field( 'githubsync_restore_checklist' ); ?>
 					<input type="hidden" name="action" value="githubsync_restore_checklist">
 					<button type="submit" class="button button-small"><?php esc_html_e( 'Show the setup checklist again', 'githubsync' ); ?></button>
@@ -51,7 +51,7 @@ $gs_connected = ! empty( $data['connected'] );
 		<?php else : ?>
 			<button
 				type="button"
-				class="button gs-checklist-bar__open"
+				class="button"
 				data-gs-dialog-open="gs-setup-checklist"
 				aria-haspopup="dialog"
 				aria-controls="gs-setup-checklist"
@@ -211,19 +211,19 @@ $gs_connected = ! empty( $data['connected'] );
 	<?php endif; ?>
 
 	<div class="gs-grid">
-		<div class="gs-card">
-			<h2><?php esc_html_e( 'GitHub connection', 'githubsync' ); ?></h2>
-			<p class="gs-big <?php echo $gs_connected ? 'gs-ok' : 'gs-bad'; ?>">
+		<div class="gs-card gs-card--stat">
+			<h2 class="gs-stat__label"><?php esc_html_e( 'GitHub connection', 'githubsync' ); ?></h2>
+			<p class="gs-stat__value <?php echo $gs_connected ? 'gs-ok' : 'gs-bad'; ?>">
 				<?php echo $gs_connected ? esc_html__( 'Connected', 'githubsync' ) : esc_html__( 'Not connected', 'githubsync' ); ?>
 			</p>
-			<p class="gs-muted"><?php echo esc_html( $data['connection'] ); ?></p>
-			<p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-connection' ) ); ?>"><?php esc_html_e( 'Manage connection', 'githubsync' ); ?></a></p>
+			<p class="gs-stat__meta"><?php echo esc_html( $data['connection'] ); ?></p>
+			<p class="gs-actions"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-connection' ) ); ?>"><?php esc_html_e( 'Manage connection', 'githubsync' ); ?></a></p>
 		</div>
 
-		<div class="gs-card">
-			<h2><?php esc_html_e( 'Deployments', 'githubsync' ); ?></h2>
-			<p class="gs-big"><?php echo esc_html( (string) count( $data['deployments'] ) ); ?></p>
-			<p class="gs-muted">
+		<div class="gs-card gs-card--stat">
+			<h2 class="gs-stat__label"><?php esc_html_e( 'Deployments', 'githubsync' ); ?></h2>
+			<p class="gs-stat__value"><?php echo esc_html( (string) count( $data['deployments'] ) ); ?></p>
+			<p class="gs-stat__meta">
 				<?php
 				printf(
 					/* translators: 1: active count, 2: auto count. */
@@ -233,23 +233,23 @@ $gs_connected = ! empty( $data['connected'] );
 				);
 				?>
 			</p>
-			<p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment-new' ) ); ?>"><?php esc_html_e( 'Add deployment', 'githubsync' ); ?></a></p>
+			<p class="gs-actions"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment-new' ) ); ?>"><?php esc_html_e( 'Add deployment', 'githubsync' ); ?></a></p>
 		</div>
 
-		<div class="gs-card">
-			<h2><?php esc_html_e( 'Queue', 'githubsync' ); ?></h2>
-			<p class="gs-big"><?php echo esc_html( (string) $data['queue_count'] ); ?></p>
-			<p class="gs-muted"><?php esc_html_e( 'Jobs waiting or retrying', 'githubsync' ); ?></p>
+		<div class="gs-card gs-card--stat">
+			<h2 class="gs-stat__label"><?php esc_html_e( 'Queue', 'githubsync' ); ?></h2>
+			<p class="gs-stat__value"><?php echo esc_html( (string) $data['queue_count'] ); ?></p>
+			<p class="gs-stat__meta"><?php esc_html_e( 'Jobs waiting or retrying', 'githubsync' ); ?></p>
 			<?php if ( $data['cron_disabled'] ) : ?>
 				<p class="gs-bad"><?php esc_html_e( 'WP-Cron is disabled. Background jobs will not run without a system cron.', 'githubsync' ); ?></p>
 			<?php endif; ?>
-			<p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-tools' ) ); ?>"><?php esc_html_e( 'Diagnostics', 'githubsync' ); ?></a></p>
+			<p class="gs-actions"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-tools' ) ); ?>"><?php esc_html_e( 'Diagnostics', 'githubsync' ); ?></a></p>
 		</div>
 
-		<div class="gs-card">
-			<h2><?php esc_html_e( 'Backup storage', 'githubsync' ); ?></h2>
-			<p class="gs-big"><?php echo esc_html( $data['backup_usage'] ); ?></p>
-			<p class="gs-muted"><?php esc_html_e( 'Retained rollback backups', 'githubsync' ); ?></p>
+		<div class="gs-card gs-card--stat">
+			<h2 class="gs-stat__label"><?php esc_html_e( 'Backup storage', 'githubsync' ); ?></h2>
+			<p class="gs-stat__value"><?php echo esc_html( $data['backup_usage'] ); ?></p>
+			<p class="gs-stat__meta"><?php esc_html_e( 'Retained rollback backups', 'githubsync' ); ?></p>
 		</div>
 	</div>
 
@@ -279,22 +279,22 @@ $gs_connected = ! empty( $data['connected'] );
 			<tbody>
 				<?php foreach ( $data['deployments'] as $gs_row ) : ?>
 					<tr>
-						<td>
+						<td data-gs-label="<?php esc_attr_e( 'Name', 'githubsync' ); ?>">
 							<a href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment&id=' . (int) $gs_row['id'] ) ); ?>">
 								<?php echo esc_html( $gs_row['name'] ); ?>
 							</a>
 						</td>
-						<td><?php echo esc_html( $gs_row['repository_full_name'] ); ?></td>
-						<td><?php echo esc_html( $gs_row['branch'] ); ?></td>
-						<td>
+						<td data-gs-label="<?php esc_attr_e( 'Repository', 'githubsync' ); ?>"><?php echo esc_html( $gs_row['repository_full_name'] ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Branch', 'githubsync' ); ?>"><?php echo esc_html( $gs_row['branch'] ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Deployed commit', 'githubsync' ); ?>">
 							<?php if ( ! empty( $gs_row['last_deployed_sha'] ) ) : ?>
 								<code><?php echo esc_html( \GitHubSync\Support\Helpers::short_sha( $gs_row['last_deployed_sha'] ) ); ?></code>
 							<?php else : ?>
 								<span class="gs-muted">—</span>
 							<?php endif; ?>
 						</td>
-						<td><?php echo (int) $gs_row['auto_deploy'] ? esc_html__( 'On', 'githubsync' ) : esc_html__( 'Off', 'githubsync' ); ?></td>
-						<td><?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_row['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Auto', 'githubsync' ); ?>"><?php echo (int) $gs_row['auto_deploy'] ? esc_html__( 'On', 'githubsync' ) : esc_html__( 'Off', 'githubsync' ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Status', 'githubsync' ); ?>"><?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_row['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
@@ -319,11 +319,11 @@ $gs_connected = ! empty( $data['connected'] );
 			<tbody>
 				<?php foreach ( $data['recent'] as $gs_job ) : ?>
 					<tr>
-						<td>#<?php echo esc_html( (string) $gs_job['id'] ); ?></td>
-						<td><?php echo esc_html( $gs_job['trigger_type'] ); ?></td>
-						<td><code><?php echo esc_html( \GitHubSync\Support\Helpers::short_sha( $gs_job['commit_sha'] ) ); ?></code></td>
-						<td><?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_job['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-						<td><?php echo esc_html( $gs_job['started_at'] ? $gs_job['started_at'] : '—' ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Job', 'githubsync' ); ?>">#<?php echo esc_html( (string) $gs_job['id'] ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Trigger', 'githubsync' ); ?>"><?php echo esc_html( $gs_job['trigger_type'] ); ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Commit', 'githubsync' ); ?>"><code><?php echo esc_html( \GitHubSync\Support\Helpers::short_sha( $gs_job['commit_sha'] ) ); ?></code></td>
+						<td data-gs-label="<?php esc_attr_e( 'Status', 'githubsync' ); ?>"><?php echo \GitHubSync\Admin\AdminMenu::badge( $gs_job['status'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+						<td data-gs-label="<?php esc_attr_e( 'Started', 'githubsync' ); ?>"><?php echo esc_html( $gs_job['started_at'] ? $gs_job['started_at'] : '—' ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>

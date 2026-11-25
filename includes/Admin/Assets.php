@@ -40,6 +40,16 @@ final class Assets {
 			true
 		);
 
+		wp_localize_script(
+			'githubsync-admin',
+			'githubSyncL10n',
+			array(
+				'cancel'   => __( 'Cancel', 'githubsync' ),
+				'continue' => __( 'Continue', 'githubsync' ),
+				'copied'   => __( 'Copied', 'githubsync' ),
+			)
+		);
+
 		unset( $hook );
 	}
 

@@ -487,8 +487,8 @@ final class Actions {
 		$snap = array();
 
 		foreach ( $keys as $key ) {
-			$value          = get_option( $key, null );
-			$snap[ $key ]   = array(
+			$value        = get_option( $key, null );
+			$snap[ $key ] = array(
 				'exists' => null !== $value,
 				'value'  => $value,
 			);
@@ -545,8 +545,8 @@ final class Actions {
 		$connection = $auth->connection();
 
 		if ( '' === $connection['account'] && ! empty( $check['items'][0]['full_name'] ) ) {
-			$parts                  = explode( '/', (string) $check['items'][0]['full_name'], 2 );
-			$connection['account']  = sanitize_text_field( (string) $parts[0] );
+			$parts                 = explode( '/', (string) $check['items'][0]['full_name'], 2 );
+			$connection['account'] = sanitize_text_field( (string) $parts[0] );
 			update_option( GitHubAuth::OPTION_CONNECTION, $connection, false );
 		}
 
