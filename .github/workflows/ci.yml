@@ -151,6 +151,8 @@ jobs:
         env:
           GH_TOKEN: ${{ env.RELEASES_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
+          # This (private) repository, for the "Source:" link and manifest field.
+          SOURCE_REPO: ${{ github.repository }}
         run: |
           TAG="$GITHUB_REF_NAME"
           # Inline notes come from the matching "## [x.y.z]" block of the changelog,
@@ -161,7 +163,7 @@ jobs:
             on && index($0, "## [") == 1 { exit }
             on { print }
           ' CHANGELOG.md > "$BODY_FILE"
-          printf '\nSource: %s/tree/%s\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY_SOURCE" "$TAG" >> "$BODY_FILE"
+          printf '\nSource: %s/tree/%s\n' "$GITHUB_SERVER_URL/$SOURCE_REPO" "$TAG" >> "$BODY_FILE"
 
           if gh release view "$TAG" --repo "$RELEASES_REPO" >/dev/null 2>&1; then
             gh release edit "$TAG" --repo "$RELEASES_REPO" --notes-file "$BODY_FILE" --draft=false
@@ -184,7 +186,7 @@ jobs:
           GITHUB_REPOSITORY="$RELEASES_REPO" \
           GITHUB_SERVER_URL="$GITHUB_SERVER_URL" \
           GITHUBSYNC_SHA256="$SHA" \
-          GITHUBSYNC_SOURCE_REPO="$GITHUB_REPOSITORY_SOURCE" \
+          GITHUBSYNC_SOURCE_REPO="$SOURCE_REPO" \
           GITHUBSYNC_SOURCE_TAG="$TAG" \
             php .github/scripts/write-manifest.php dist/githubsync.zip dist/update.json
 
