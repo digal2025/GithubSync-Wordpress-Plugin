@@ -19,7 +19,6 @@ use GitHubSync\Filesystem\FilesystemAdapter;
 use GitHubSync\Queue\Queue;
 use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
-use GitHubSync\Update\Updater;
 use GitHubSync\Webhooks\WebhookController;
 
 defined( 'ABSPATH' ) || exit;
@@ -76,10 +75,6 @@ final class Plugin {
 
 		add_filter( 'plugin_action_links_' . plugin_basename( GITHUBSYNC_FILE ), array( __CLASS__, 'action_links' ) );
 
-		// Self-updates run outside the admin too, so WordPress's own update
-		// cron (and WP-CLI) can see new releases.
-		Updater::register();
-
 		if ( Helpers::is_multisite() ) {
 			add_action( 'admin_notices', array( __CLASS__, 'multisite_notice' ) );
 		}
@@ -114,7 +109,7 @@ final class Plugin {
 		( new DeliveryRepository() )->purge_older_than( 30 );
 
 		// Remove abandoned work directories older than 24 hours.
-		$work  = Helpers::work_dir();
+		$work = Helpers::work_dir();
 		$items = @scandir( $work ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 
 		if ( ! is_array( $items ) ) {
