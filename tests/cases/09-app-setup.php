@@ -192,8 +192,13 @@ Assert::true( isset( $manifest['hook_attributes']['active'] ) && false === $mani
 Assert::true( isset( $manifest['hook_attributes']['url'] ) && '' !== (string) $manifest['hook_attributes']['url'], 'the hook URL is supplied because GitHub requires it' );
 Assert::true( false !== strpos( (string) $manifest['hook_attributes']['url'], '/githubsync/v1/webhook/' ), 'the hook URL points at the site webhook route' );
 
-$hook_route = wp_parse_url( (string) $manifest['hook_attributes']['url'], PHP_URL_PATH );
-Assert::true( null !== $hook_route && 1 === preg_match( '#/githubsync/v1/webhook/[a-f0-9]{64}$#', (string) $hook_route ), 'the hook URL uses the path form the webhook route accepts' );
+// Pretty permalinks put the route in the path; plain permalinks use the
+// ?rest_route= fallback. Both are URLs GitHub can deliver to, so accept either.
+$hook_url     = (string) $manifest['hook_attributes']['url'];
+$hook_path    = (string) wp_parse_url( $hook_url, PHP_URL_PATH );
+$hook_query   = (string) wp_parse_url( $hook_url, PHP_URL_QUERY );
+$hook_request = '' !== $hook_query ? $hook_path . '?' . $hook_query : $hook_path;
+Assert::true( 1 === preg_match( '#(/|rest_route=/githubsync/v1/webhook/)[a-f0-9]{64}$#', $hook_request ), 'the hook URL addresses the webhook route with its token' );
 
 $hook_secret = AppSetup::hook_secret();
 Assert::true( 1 === preg_match( '/^[a-f0-9]{64}$/', $hook_secret ), 'the hook secret is 64 hex characters' );
