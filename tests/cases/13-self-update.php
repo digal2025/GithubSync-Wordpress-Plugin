@@ -176,3 +176,52 @@ remove_filter( 'pre_http_request', $serve, 10 );
 Updater::save_manifest_url( $previous_url );
 wp_delete_file( $good_zip );
 wp_delete_file( $bad_zip );
+
+CaseRunner::group( 'Self-update details dialog' );
+
+// The Plugins screen asks for plugin_information whether or not an update is
+// waiting, so the filter must answer for an up-to-date install too. Otherwise
+// WordPress.org replies "Plugin not found".
+CaseRunner::case( 'an up-to-date plugin still has details' );
+$info_url      = 'https://github.com/digal2025/githubsync-releases/releases/latest/download/update.json';
+$info_previous = (string) get_option( Updater::URL_OPTION );
+
+Updater::save_manifest_url( $info_url );
+
+$info_serve = static function ( $pre, $args, $url ) use ( $info_url ) {
+	if ( $info_url !== $url ) {
+		return $pre;
+	}
+
+	return array(
+		'headers'  => array(),
+		'body'     => (string) wp_json_encode(
+			array(
+				'version'      => GITHUBSYNC_VERSION,
+				'download_url' => 'https://github.com/digal2025/githubsync-releases/releases/download/v' . GITHUBSYNC_VERSION . '/githubsync.zip',
+				'sha256'       => 'sha256:' . str_repeat( 'ab', 32 ),
+				'changelog'    => "### Fixed\n\n- Something.",
+				'tested'       => '7.1',
+			)
+		),
+		'response' => array(
+			'code'    => 200,
+			'message' => 'OK',
+		),
+		'cookies'  => array(),
+	);
+};
+
+add_filter( 'pre_http_request', $info_serve, 10, 3 );
+
+$info = Updater::filter_plugin_information( false, 'plugin_information', (object) array( 'slug' => 'githubsync' ) );
+Assert::true( is_object( $info ), 'details returned while up to date' );
+Assert::same( GITHUBSYNC_VERSION, is_object( $info ) ? $info->version : '', 'details describe the latest release' );
+Assert::true( is_object( $info ) && isset( $info->sections['changelog'] ), 'release notes are included' );
+
+CaseRunner::case( 'other plugins and other actions are left alone' );
+Assert::false( Updater::filter_plugin_information( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ), 'foreign slug: untouched' );
+Assert::false( Updater::filter_plugin_information( false, 'hot_tags', (object) array( 'slug' => 'githubsync' ) ), 'other action: untouched' );
+
+remove_filter( 'pre_http_request', $info_serve, 10 );
+Updater::save_manifest_url( $info_previous );

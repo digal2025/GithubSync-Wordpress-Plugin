@@ -461,7 +461,10 @@ final class Updater {
 
 		$release = self::get_release();
 
-		if ( is_wp_error( $release ) || ! self::is_newer( $release['version'] ) ) {
+		// Answer for the plugin even when it is up to date: the "View details"
+		// link on the Plugins screen asks for this whether or not an update is
+		// waiting, and without an answer WordPress.org reports "Plugin not found".
+		if ( is_wp_error( $release ) ) {
 			return $result;
 		}
 

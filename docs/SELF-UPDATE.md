@@ -67,7 +67,8 @@ https://github.com/digal2025/githubsync-releases/releases/latest/download/update
 ### Manifest format
 
 `update.json` is plain JSON. Only `version`, `download_url` and `sha256` are
-required.
+required. The release job copies `requires` and `tested` from `readme.txt`, so
+those stay honest without a second place to edit.
 
 ```json
 {
@@ -76,7 +77,7 @@ required.
   "download_url": "https://github.com/digal2025/githubsync-releases/releases/download/v0.1.9/githubsync.zip",
   "sha256": "sha256:0123…(64 hex characters)",
   "requires": "7.4",
-  "tested": "6.8",
+  "tested": "7.1",
   "homepage": "https://github.com/digal2025/GithubSync-Wordpress-Plugin",
   "source": "https://github.com/digal2025/GithubSync-Wordpress-Plugin/tree/v0.1.9",
   "released_at": "2026-12-01",

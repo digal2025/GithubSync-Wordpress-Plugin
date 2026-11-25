@@ -86,8 +86,8 @@ $manifest = array(
 	'version'      => $version,
 	'download_url' => sprintf( 'https://github.com/%s/releases/download/%s/githubsync.zip', $repo, $tag ),
 	'sha256'       => 'sha256:' . $sha,
-	'requires'     => '7.4',
-	'tested'       => '6.8',
+	'requires'     => readme_field( 'Requires PHP', '7.4' ),
+	'tested'       => readme_field( 'Tested up to', '6.8' ),
 	'homepage'     => $homepage,
 	'source'       => '' !== $source_repo ? sprintf( 'https://github.com/%s/tree/%s', $source_repo, $source_tag ) : '',
 	'released_at'  => gmdate( 'Y-m-d' ),
@@ -107,6 +107,29 @@ if ( false === file_put_contents( $output, $json . "\n" ) ) { // phpcs:ignore Wo
 }
 
 echo "Wrote {$output} (githubsync {$version}, sha256 {$sha})\n";
+
+/**
+ * Read a "Label: value" line from readme.txt.
+ *
+ * @param string $label    Field label, e.g. "Tested up to".
+ * @param string $fallback Value to use when the field is missing.
+ * @return string
+ */
+function readme_field( $label, $fallback ) {
+	$file = dirname( __DIR__, 2 ) . '/readme.txt';
+
+	if ( ! is_file( $file ) ) {
+		return $fallback;
+	}
+
+	$readme = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+	if ( preg_match( '/^' . preg_quote( $label, '/' ) . ':\s*(\S+)/mi', $readme, $matches ) ) {
+		return $matches[1];
+	}
+
+	return $fallback;
+}
 
 /**
  * Pull one "## [x.y.z]" block out of CHANGELOG.md.
