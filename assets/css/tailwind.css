@@ -1,0 +1,949 @@
+/**
+ * GitHubSync admin UI.
+ *
+ * A small, deliberately quiet design system built with Tailwind CSS. Only the
+ * compiled assets/css/admin.css ships; this source and tailwind.config.js are
+ * development files. `tw-` prefix + disabled preflight keep every rule scoped
+ * to GitHubSync screens.
+ *
+ * Run `npm run build:css` after editing this file.
+ */
+
+@tailwind components;
+
+/* -------------------------------------------------------------------------
+ * Shell and type
+ * ---------------------------------------------------------------------- */
+
+.gs-wrap,
+.gs-wrap *,
+.gs-wrap *::before,
+.gs-wrap *::after,
+.gs-dialog,
+.gs-dialog *,
+.gs-dialog *::before,
+.gs-dialog *::after {
+	box-sizing: border-box;
+}
+
+.gs-wrap {
+	@apply tw-mx-auto tw-w-full tw-max-w-[1180px] tw-pb-12;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.gs-wrap a {
+	@apply tw-text-brand-700 tw-underline-offset-2;
+}
+
+.gs-wrap a:hover {
+	@apply tw-text-brand-800;
+}
+
+.gs-title {
+	@apply tw-m-0 tw-text-[24px] tw-font-semibold tw-leading-tight tw-text-slate-900;
+}
+
+.gs-subtitle {
+	@apply tw-mt-1 tw-mb-0 tw-text-sm tw-text-slate-500;
+}
+
+.gs-section-title {
+	@apply tw-m-0 tw-text-base tw-font-semibold tw-text-slate-900;
+}
+
+.gs-section-head {
+	@apply tw-mb-3 tw-mt-8 tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3;
+}
+
+.gs-link-arrow {
+	@apply tw-inline-flex tw-items-center tw-gap-1 tw-text-sm tw-font-medium tw-no-underline;
+}
+
+.gs-backlink {
+	@apply tw-mb-3 tw-mt-0 tw-text-xs;
+}
+
+.gs-backlink a {
+	@apply tw-inline-flex tw-items-center tw-gap-1 tw-font-medium tw-text-slate-500 tw-no-underline;
+}
+
+.gs-muted {
+	@apply tw-text-[13px] tw-leading-5 tw-text-slate-500;
+}
+
+.gs-hint,
+.gs-source-hint {
+	@apply tw-mt-1 tw-mb-0 tw-text-xs tw-leading-5 tw-text-slate-500;
+}
+
+.gs-source-hint {
+	@apply tw-text-brand-700;
+}
+
+.gs-ok {
+	@apply tw-text-emerald-700;
+}
+
+.gs-bad {
+	@apply tw-text-rose-700;
+}
+
+.gs-warn {
+	@apply tw-text-amber-700;
+}
+
+.gs-break,
+.gs-path,
+.gs-path-soft {
+	@apply tw-break-all;
+}
+
+.gs-wrap code {
+	@apply tw-rounded tw-bg-slate-100 tw-px-1 tw-py-0.5 tw-font-mono tw-text-[0.85em] tw-text-slate-700;
+}
+
+.gs-wrap pre code,
+.gs-wrap .gs-code code {
+	@apply tw-bg-transparent tw-p-0 tw-text-inherit;
+}
+
+.gs-code {
+	@apply tw-mt-3 tw-overflow-x-auto tw-rounded-lg tw-bg-slate-900 tw-px-3 tw-py-2 tw-font-mono tw-text-xs tw-leading-5 tw-text-slate-100;
+}
+
+.gs-icon {
+	@apply tw-inline-block tw-flex-none;
+	width: 1.05em;
+	height: 1.05em;
+	vertical-align: -0.15em;
+}
+
+/* Page header ------------------------------------------------------------ */
+
+.gs-page-head {
+	@apply tw-mb-5 tw-flex tw-flex-wrap tw-items-end tw-justify-between tw-gap-4;
+}
+
+.gs-page-head__text {
+	@apply tw-flex tw-min-w-0 tw-flex-1 tw-items-start tw-gap-3;
+}
+
+.gs-page-head__icon {
+	@apply tw-flex tw-h-9 tw-w-9 tw-flex-none tw-items-center tw-justify-center tw-rounded-lg tw-bg-brand-50 tw-text-brand-700;
+}
+
+.gs-page-head__icon .gs-icon {
+	@apply tw-h-5 tw-w-5;
+}
+
+.gs-page-head__actions {
+	@apply tw-flex tw-flex-wrap tw-items-center tw-gap-2;
+}
+
+/* Cards and stats -------------------------------------------------------- */
+
+.gs-card {
+	@apply tw-mb-5 tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-p-5;
+}
+
+.gs-card > h2 {
+	@apply tw-m-0 tw-mb-3 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-font-semibold tw-text-slate-900;
+}
+
+.gs-card > h2 .gs-icon {
+	@apply tw-h-4 tw-w-4 tw-text-brand-600;
+}
+
+.gs-card--wide {
+	grid-column: 1 / -1;
+}
+
+.gs-card--side {
+	@apply tw-h-fit;
+}
+
+.gs-card--stat {
+	@apply tw-mb-0;
+}
+
+.gs-grid {
+	@apply tw-my-5 tw-grid tw-gap-4;
+	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.gs-grid > .gs-card {
+	@apply tw-mb-0;
+}
+
+.gs-stat__label {
+	@apply tw-m-0 tw-flex tw-items-center tw-gap-2 tw-text-[11px] tw-font-semibold tw-uppercase tw-text-slate-500;
+	letter-spacing: 0.06em;
+}
+
+.gs-stat__value {
+	@apply tw-mt-2 tw-mb-0 tw-text-2xl tw-font-semibold tw-leading-tight tw-text-slate-900;
+}
+
+.gs-stat__meta {
+	@apply tw-mt-1 tw-mb-0 tw-text-[13px] tw-leading-5 tw-text-slate-500;
+}
+
+.gs-stat__icon {
+	@apply tw-absolute tw-right-4 tw-top-4 tw-text-slate-300;
+}
+
+.gs-stat__icon .gs-icon {
+	@apply tw-h-4 tw-w-4;
+}
+
+.gs-stat__foot {
+	@apply tw-mt-3 tw-flex tw-items-center tw-gap-2;
+}
+
+.gs-facts {
+	@apply tw-m-0 tw-space-y-2 tw-p-0;
+	list-style: none;
+}
+
+.gs-facts li {
+	@apply tw-flex tw-items-center tw-justify-between tw-gap-3 tw-rounded-md tw-bg-slate-50 tw-px-3 tw-py-2 tw-text-sm tw-text-slate-600;
+}
+
+.gs-facts strong {
+	@apply tw-font-semibold tw-text-slate-900;
+}
+
+.gs-defs {
+	@apply tw-m-0 tw-grid tw-gap-3;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gs-defs > div {
+	@apply tw-rounded-md tw-bg-slate-50 tw-px-3 tw-py-2;
+}
+
+.gs-defs dt {
+	@apply tw-text-[11px] tw-font-semibold tw-uppercase tw-text-slate-500;
+	letter-spacing: 0.06em;
+}
+
+.gs-defs dd {
+	@apply tw-mt-0.5 tw-mb-0 tw-ml-0 tw-text-sm tw-text-slate-900;
+}
+
+.gs-columns {
+	@apply tw-grid tw-gap-4;
+	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+}
+
+/* Badges ----------------------------------------------------------------- */
+
+.gs-badge {
+	@apply tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-px-2 tw-py-0.5 tw-text-[11px] tw-font-semibold tw-leading-4 tw-ring-1 tw-ring-inset;
+}
+
+.gs-badge--success {
+	@apply tw-bg-emerald-50 tw-text-emerald-700 tw-ring-emerald-200;
+}
+
+.gs-badge--warning {
+	@apply tw-bg-amber-50 tw-text-amber-700 tw-ring-amber-200;
+}
+
+.gs-badge--error {
+	@apply tw-bg-rose-50 tw-text-rose-700 tw-ring-rose-200;
+}
+
+.gs-badge--info {
+	@apply tw-bg-sky-50 tw-text-sky-700 tw-ring-sky-200;
+}
+
+.gs-badge--muted {
+	@apply tw-bg-slate-100 tw-text-slate-600 tw-ring-slate-200;
+}
+
+/* Buttons ---------------------------------------------------------------- */
+
+:is(.gs-wrap, .gs-dialog) .button,
+.gs-wrap .page-title-action {
+	@apply tw-inline-flex tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-md tw-border tw-border-solid tw-border-slate-300 tw-bg-white tw-px-3 tw-text-[13px] tw-font-medium tw-leading-5 tw-text-slate-700 tw-transition-colors tw-no-underline;
+	height: auto;
+	min-height: 34px;
+}
+
+:is(.gs-wrap, .gs-dialog) .button:hover,
+.gs-wrap .page-title-action:hover {
+	@apply tw-border-slate-400 tw-bg-slate-50 tw-text-slate-900;
+}
+
+:is(.gs-wrap, .gs-dialog) .button:focus,
+:is(.gs-wrap, .gs-dialog) .button:focus-visible {
+	@apply tw-border-brand-500 tw-text-slate-900;
+	box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+	outline: none;
+}
+
+:is(.gs-wrap, .gs-dialog) .button[disabled] {
+	@apply tw-cursor-not-allowed tw-opacity-50;
+}
+
+:is(.gs-wrap, .gs-dialog) .button-primary {
+	@apply tw-border-brand-600 tw-bg-brand-600 tw-text-white;
+}
+
+:is(.gs-wrap, .gs-dialog) .button-primary:hover {
+	@apply tw-border-brand-700 tw-bg-brand-700 tw-text-white;
+}
+
+:is(.gs-wrap, .gs-dialog) .button-small {
+	@apply tw-px-2.5 tw-text-xs;
+	min-height: 28px;
+}
+
+:is(.gs-wrap, .gs-dialog) .button .gs-icon {
+	@apply tw-h-4 tw-w-4;
+}
+
+:is(.gs-wrap, .gs-dialog) .gs-danger {
+	@apply tw-border-rose-200 tw-bg-white tw-text-rose-700;
+}
+
+:is(.gs-wrap, .gs-dialog) .gs-danger:hover {
+	@apply tw-border-rose-300 tw-bg-rose-50 tw-text-rose-800;
+}
+
+:is(.gs-wrap, .gs-dialog) .button-primary.gs-danger {
+	@apply tw-border-rose-600 tw-bg-rose-600 tw-text-white;
+}
+
+:is(.gs-wrap, .gs-dialog) .button-primary.gs-danger:hover {
+	@apply tw-border-rose-700 tw-bg-rose-700 tw-text-white;
+}
+
+.gs-inline {
+	@apply tw-m-0 tw-inline-flex;
+}
+
+.gs-actions,
+.gs-actionbar {
+	@apply tw-flex tw-flex-wrap tw-items-center tw-gap-2;
+}
+
+.gs-actions {
+	@apply tw-mt-4 tw-mb-0;
+}
+
+.gs-field-actions {
+	@apply tw-mt-3 tw-mb-0;
+}
+
+.gs-pager {
+	@apply tw-mt-4 tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3;
+}
+
+.gs-actionbar + .gs-muted {
+	@apply tw-mt-3;
+}
+
+/* Alerts ----------------------------------------------------------------- */
+
+.gs-notice {
+	@apply tw-mb-5 tw-rounded-md tw-border tw-border-solid tw-border-l-[3px] tw-px-4 tw-py-3 tw-text-[13px] tw-leading-5;
+}
+
+.gs-notice--success {
+	@apply tw-border-slate-200 tw-border-l-emerald-500 tw-bg-emerald-50/60 tw-text-emerald-900;
+}
+
+.gs-notice--info {
+	@apply tw-border-slate-200 tw-border-l-sky-500 tw-bg-sky-50/60 tw-text-sky-900;
+}
+
+.gs-notice--warning {
+	@apply tw-border-slate-200 tw-border-l-amber-500 tw-bg-amber-50/60 tw-text-amber-900;
+}
+
+.gs-notice--error {
+	@apply tw-border-slate-200 tw-border-l-rose-500 tw-bg-rose-50/60 tw-text-rose-900;
+}
+
+.gs-notice a {
+	@apply tw-font-medium tw-underline;
+}
+
+/* Progress --------------------------------------------------------------- */
+
+.gs-progress {
+	@apply tw-mt-3 tw-h-1.5 tw-w-full tw-overflow-hidden tw-rounded-full tw-bg-slate-200;
+}
+
+.gs-progress__bar {
+	@apply tw-block tw-h-full tw-rounded-full tw-bg-brand-600 tw-transition-all;
+}
+
+/* Tables ----------------------------------------------------------------- */
+
+.gs-table-wrap {
+	@apply tw-mb-5 tw-overflow-x-auto tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white;
+}
+
+.gs-table {
+	@apply tw-w-full tw-border-collapse tw-text-[13px];
+}
+
+.gs-table thead th {
+	@apply tw-border-b tw-border-slate-200 tw-bg-slate-50 tw-px-3 tw-py-2.5 tw-text-left tw-text-[11px] tw-font-semibold tw-uppercase tw-text-slate-500;
+	letter-spacing: 0.06em;
+	white-space: nowrap;
+}
+
+.gs-table tbody td {
+	@apply tw-border-b tw-border-slate-100 tw-px-3 tw-py-2.5 tw-align-middle tw-text-slate-600;
+}
+
+.gs-table tbody tr:last-child td {
+	@apply tw-border-b-0;
+}
+
+.gs-table tbody tr:hover {
+	@apply tw-bg-slate-50;
+}
+
+.gs-table tbody td a {
+	@apply tw-font-medium tw-text-slate-900 tw-no-underline;
+}
+
+.gs-table tbody td a:hover {
+	@apply tw-text-brand-700 tw-underline;
+}
+
+.gs-table .gs-actions {
+	@apply tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-1.5;
+}
+
+.gs-table code {
+	@apply tw-whitespace-nowrap;
+}
+
+.gs-table code.gs-path,
+.gs-table code.gs-path-soft {
+	@apply tw-whitespace-normal;
+}
+
+.gs-deployments__meta {
+	@apply tw-mt-1 tw-flex tw-flex-wrap tw-items-center tw-gap-2;
+}
+
+.gs-log td:nth-child(4) {
+	@apply tw-max-w-[420px] tw-break-words;
+}
+
+.gs-checks .gs-check-value {
+	@apply tw-break-all;
+}
+
+.gs-mini-stats {
+	@apply tw-mb-4 tw-flex tw-flex-wrap tw-gap-2;
+}
+
+.gs-mini-stat {
+	@apply tw-inline-flex tw-items-center tw-gap-1.5 tw-rounded-md tw-border tw-border-slate-200 tw-bg-white tw-px-2.5 tw-py-1 tw-text-xs tw-text-slate-500;
+}
+
+.gs-mini-stat strong {
+	@apply tw-font-semibold tw-text-slate-900;
+}
+
+/* Empty states ----------------------------------------------------------- */
+
+.gs-empty {
+	@apply tw-mb-5 tw-flex tw-flex-col tw-items-center tw-gap-2 tw-rounded-lg tw-border tw-border-dashed tw-border-slate-300 tw-bg-slate-50/50 tw-px-6 tw-py-10 tw-text-center;
+}
+
+.gs-empty__icon {
+	@apply tw-mb-1 tw-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-lg tw-bg-white tw-text-slate-400 tw-ring-1 tw-ring-inset tw-ring-slate-200;
+}
+
+.gs-empty__icon .gs-icon {
+	@apply tw-h-5 tw-w-5;
+}
+
+.gs-empty__title {
+	@apply tw-m-0 tw-text-sm tw-font-semibold tw-text-slate-900;
+}
+
+.gs-empty__text {
+	@apply tw-m-0 tw-max-w-md tw-text-sm tw-leading-6 tw-text-slate-500;
+}
+
+.gs-empty__actions {
+	@apply tw-mt-2 tw-mb-0;
+}
+
+/* Forms ------------------------------------------------------------------ */
+
+.gs-wrap input[type="text"],
+.gs-wrap input[type="password"],
+.gs-wrap input[type="search"],
+.gs-wrap input[type="number"],
+.gs-wrap input[type="email"],
+.gs-wrap input[type="url"],
+.gs-wrap select,
+.gs-wrap textarea {
+	@apply tw-rounded-md tw-border tw-border-solid tw-border-slate-300 tw-bg-white tw-text-[13px] tw-text-slate-900 tw-shadow-none tw-outline-none tw-transition-colors;
+	min-height: 36px;
+	padding: 0.4rem 0.6rem;
+}
+
+.gs-wrap textarea {
+	min-height: 92px;
+}
+
+.gs-wrap input[type="text"]:focus,
+.gs-wrap input[type="password"]:focus,
+.gs-wrap input[type="search"]:focus,
+.gs-wrap input[type="number"]:focus,
+.gs-wrap input[type="email"]:focus,
+.gs-wrap input[type="url"]:focus,
+.gs-wrap select:focus,
+.gs-wrap textarea:focus {
+	@apply tw-border-brand-500;
+	box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.gs-wrap input[readonly],
+.gs-wrap textarea[readonly] {
+	@apply tw-bg-slate-50 tw-text-slate-600;
+}
+
+.gs-wrap input[type="checkbox"],
+.gs-wrap input[type="radio"] {
+	@apply tw-h-4 tw-w-4 tw-rounded tw-border-slate-300;
+	accent-color: #059669;
+	vertical-align: -2px;
+}
+
+.gs-wrap .regular-text {
+	@apply tw-w-full;
+	max-width: 30rem;
+}
+
+.gs-wrap .large-text {
+	@apply tw-w-full;
+}
+
+.gs-wrap .description {
+	@apply tw-mt-1 tw-mb-0 tw-text-xs tw-leading-5 tw-text-slate-500;
+}
+
+.gs-wrap .form-table {
+	@apply tw-mt-0 tw-w-full;
+	border-collapse: collapse;
+}
+
+.gs-wrap .form-table tr {
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.gs-wrap .form-table tr:last-child {
+	border-bottom: 0;
+}
+
+.gs-wrap .form-table th {
+	@apply tw-w-[200px] tw-py-3 tw-pr-6 tw-align-top tw-text-[13px] tw-font-semibold tw-text-slate-800;
+	padding-left: 0;
+}
+
+.gs-wrap .form-table td {
+	@apply tw-py-3;
+	padding-left: 0;
+}
+
+.gs-form--dense .form-table th,
+.gs-form--dense .form-table td {
+	@apply tw-py-2;
+}
+
+.gs-form--dense input[type="number"] {
+	@apply tw-w-24;
+}
+
+.gs-check-group {
+	@apply tw-mb-3 tw-rounded-md tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-3;
+}
+
+.gs-check-group label {
+	@apply tw-flex tw-items-start tw-gap-2 tw-text-[13px] tw-font-medium tw-text-slate-800;
+}
+
+.gs-check-group .description {
+	@apply tw-mt-1;
+}
+
+.gs-copy-field {
+	@apply tw-mb-4;
+}
+
+.gs-copy-field label {
+	@apply tw-mb-1 tw-block tw-text-[11px] tw-font-semibold tw-uppercase tw-text-slate-500;
+	letter-spacing: 0.06em;
+}
+
+.gs-copy-field__row {
+	@apply tw-flex tw-items-stretch tw-gap-2;
+}
+
+.gs-copy-field__row input {
+	@apply tw-min-w-0 tw-flex-1 tw-font-mono tw-text-xs;
+}
+
+.gs-layout {
+	@apply tw-grid tw-items-start tw-gap-4;
+	grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.gs-layout__main,
+.gs-layout__side {
+	@apply tw-min-w-0;
+}
+
+.gs-panel {
+	@apply tw-mb-4 tw-overflow-hidden tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white;
+}
+
+.gs-panel__head {
+	@apply tw-flex tw-items-center tw-gap-3 tw-border-b tw-border-slate-100 tw-bg-slate-50/60 tw-px-4 tw-py-3;
+}
+
+.gs-panel__step {
+	@apply tw-flex tw-h-6 tw-w-6 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-brand-600 tw-text-[11px] tw-font-semibold tw-text-white;
+}
+
+.gs-panel__title {
+	@apply tw-m-0 tw-text-sm tw-font-semibold tw-text-slate-900;
+}
+
+.gs-panel__hint {
+	@apply tw-m-0 tw-text-xs tw-text-slate-500;
+}
+
+.gs-panel__body {
+	@apply tw-px-4 tw-py-4;
+}
+
+.gs-field {
+	@apply tw-mb-5;
+}
+
+.gs-field:last-child {
+	@apply tw-mb-0;
+}
+
+.gs-field > label,
+.gs-field > .gs-label {
+	@apply tw-mb-1 tw-flex tw-items-center tw-gap-1.5 tw-text-[13px] tw-font-semibold tw-text-slate-800;
+}
+
+.gs-field input[type="text"],
+.gs-field select,
+.gs-field textarea {
+	@apply tw-w-full;
+}
+
+.gs-form-foot {
+	@apply tw-mb-6 tw-flex tw-flex-wrap tw-items-center tw-gap-2;
+}
+
+.gs-help__title {
+	@apply tw-m-0 tw-mb-3 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-font-semibold tw-text-slate-900;
+}
+
+.gs-help__title .gs-icon {
+	@apply tw-h-4 tw-w-4 tw-text-brand-600;
+}
+
+.gs-help__list {
+	@apply tw-m-0 tw-space-y-2 tw-pl-5 tw-text-[13px] tw-leading-5 tw-text-slate-600;
+}
+
+.gs-help__list strong {
+	@apply tw-font-semibold tw-text-slate-800;
+}
+
+.gs-help__note {
+	@apply tw-mt-3 tw-mb-0 tw-rounded-md tw-bg-brand-50 tw-px-3 tw-py-2 tw-text-xs tw-leading-5 tw-text-brand-800;
+}
+
+.gs-status-line {
+	@apply tw-mb-5 tw-flex tw-flex-wrap tw-items-center tw-gap-3 tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-px-4 tw-py-3;
+}
+
+.gs-status-line__state {
+	@apply tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-ring-1 tw-ring-inset;
+}
+
+.gs-status-line__state.gs-ok {
+	@apply tw-bg-emerald-50 tw-text-emerald-700 tw-ring-emerald-200;
+}
+
+.gs-status-line__state.gs-bad {
+	@apply tw-bg-rose-50 tw-text-rose-700 tw-ring-rose-200;
+}
+
+.gs-status-line__meta {
+	@apply tw-text-[13px] tw-text-slate-500;
+}
+
+.gs-status-line__actions {
+	@apply tw-ml-auto tw-flex tw-flex-wrap tw-items-center tw-gap-2;
+}
+
+.gs-list {
+	@apply tw-m-0 tw-space-y-2 tw-p-0;
+	list-style: none;
+}
+
+.gs-list li {
+	@apply tw-rounded-md tw-border tw-border-rose-100 tw-bg-rose-50 tw-px-3 tw-py-2 tw-text-[13px] tw-leading-5 tw-text-rose-900;
+}
+
+/* Setup checklist dialog ------------------------------------------------- */
+
+.gs-checkbar,
+.gs-checkbar__form {
+	@apply tw-m-0 tw-inline-flex;
+}
+
+.gs-dialog {
+	@apply tw-w-[min(640px,calc(100vw-2rem))] tw-max-w-none tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-p-0 tw-text-slate-700;
+}
+
+.gs-dialog::backdrop {
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.gs-dialog__inner {
+	@apply tw-p-5 sm:tw-p-6;
+}
+
+.gs-dialog__head {
+	@apply tw-flex tw-items-start tw-justify-between tw-gap-4;
+}
+
+.gs-dialog__title h2 {
+	@apply tw-m-0 tw-text-base tw-font-semibold tw-text-slate-900;
+}
+
+.gs-dialog__title p {
+	@apply tw-mt-1 tw-mb-0;
+}
+
+.gs-dialog__x {
+	@apply tw-flex tw-h-7 tw-w-7 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-md tw-border-0 tw-bg-slate-100 tw-p-0 tw-text-base tw-leading-none tw-text-slate-500 tw-transition-colors hover:tw-bg-slate-200;
+}
+
+.gs-dialog__foot {
+	@apply tw-mt-5 tw-flex tw-flex-wrap tw-items-center tw-justify-end tw-gap-2;
+}
+
+.gs-dialog__foot .gs-muted {
+	@apply tw-mr-auto tw-mb-0;
+}
+
+.gs-dialog__foot form {
+	@apply tw-m-0;
+}
+
+.gs-dialog--confirm {
+	@apply tw-w-[min(440px,calc(100vw-2rem))];
+}
+
+.gs-confirm__text {
+	@apply tw-mt-3 tw-mb-0 tw-text-[13px] tw-leading-5 tw-text-slate-600;
+}
+
+.gs-dialog__cron {
+	@apply tw-mt-4 tw-rounded-md tw-bg-slate-50 tw-px-3 tw-py-2;
+}
+
+.gs-dialog__hint {
+	@apply tw-mr-auto tw-mb-0;
+}
+
+/* The checklist stays a single scrollable list: no carousel chrome. */
+.gs-carousel__viewport {
+	@apply tw-mt-4 tw-max-h-[50vh] tw-space-y-2 tw-overflow-y-auto;
+}
+
+.gs-slide {
+	@apply tw-rounded-md tw-border tw-border-slate-200 tw-p-3;
+}
+
+.gs-slide--done {
+	@apply tw-border-emerald-200 tw-bg-emerald-50/40;
+}
+
+.gs-slide__kicker {
+	@apply tw-m-0 tw-text-[11px] tw-font-semibold tw-uppercase tw-text-slate-400;
+	letter-spacing: 0.06em;
+}
+
+.gs-slide__title {
+	@apply tw-mt-1 tw-mb-1 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm tw-font-semibold tw-text-slate-900;
+}
+
+.gs-slide__title + p {
+	@apply tw-m-0 tw-text-[13px] tw-leading-5 tw-text-slate-600;
+}
+
+.gs-slide__state {
+	@apply tw-mt-2 tw-rounded tw-bg-slate-50 tw-px-2 tw-py-1 tw-text-xs tw-text-slate-500;
+}
+
+.gs-slide > p:last-child {
+	@apply tw-mt-2;
+}
+
+.gs-slide[hidden] {
+	display: none;
+}
+
+/* Collapsible card ------------------------------------------------------- */
+
+details.gs-card {
+	@apply tw-p-0;
+}
+
+details.gs-card > summary {
+	@apply tw-cursor-pointer tw-list-none tw-rounded-t-lg tw-px-4 tw-py-3 tw-text-sm tw-font-medium tw-text-slate-800;
+	padding-left: 2.5rem;
+}
+
+details.gs-card > summary::-webkit-details-marker {
+	display: none;
+}
+
+details.gs-card > summary::before {
+	content: "▸";
+	@apply tw-absolute tw-text-slate-400;
+	left: 1.1rem;
+	top: 0.95rem;
+}
+
+details.gs-card[open] > summary::before {
+	content: "▾";
+}
+
+details.gs-card[open] > summary {
+	@apply tw-rounded-b-none tw-border-b tw-border-slate-100;
+}
+
+details.gs-card > summary:focus-visible {
+	outline: 2px solid #059669;
+	outline-offset: -2px;
+}
+
+details.gs-card > *:not(summary) {
+	@apply tw-mx-4;
+}
+
+details.gs-card > *:last-child {
+	@apply tw-mb-4;
+}
+
+/* -------------------------------------------------------------------------
+ * Responsive
+ * ---------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+	.gs-layout,
+	.gs-columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 782px) {
+	.gs-wrap {
+		padding-right: 10px;
+	}
+
+	.gs-title {
+		font-size: 22px;
+	}
+
+	.gs-page-head,
+	.gs-page-head__actions {
+		align-items: flex-start;
+		width: 100%;
+	}
+
+	.gs-defs {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.gs-table-wrap {
+		overflow: visible;
+		border: 0;
+		background: transparent;
+	}
+
+	.gs-table,
+	.gs-table tbody,
+	.gs-table tr,
+	.gs-table td {
+		display: block;
+		width: 100%;
+	}
+
+	.gs-table thead {
+		display: none;
+	}
+
+	.gs-table tbody tr {
+		margin-bottom: 0.75rem;
+		border: 1px solid #e2e8f0;
+		border-radius: 0.5rem;
+		background: #fff;
+		padding: 0.25rem 0;
+	}
+
+	.gs-table tbody td {
+		border: 0;
+		padding: 0.35rem 0.75rem;
+	}
+
+	.gs-table tbody tr:hover {
+		background: #fff;
+	}
+
+	.gs-table td[data-gs-label]::before {
+		content: attr(data-gs-label);
+		display: block;
+		margin-bottom: 2px;
+		color: #94a3b8;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.gs-form .form-table,
+	.gs-form .form-table tbody,
+	.gs-form .form-table tr,
+	.gs-form .form-table th,
+	.gs-form .form-table td {
+		display: block;
+		width: 100%;
+	}
+
+	.gs-form .form-table tr {
+		padding: 0.75rem 0;
+	}
+
+	.gs-form .form-table th {
+		padding-bottom: 0.25rem;
+	}
+}
+
+@tailwind utilities;

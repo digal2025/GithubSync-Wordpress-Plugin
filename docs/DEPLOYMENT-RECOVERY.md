@@ -52,7 +52,7 @@ surface through WP-Cron's status instead.)
 | `DISK_SPACE_LOW` | Not enough free space for staging, the backup or the work directory. | Free space, retry. |
 | `BACKUP_FAILED` | Could not copy or verify the live tree (disk space, the tree changed mid-copy, permissions). | Free space and retry. Never promote by hand to "skip" this. |
 | `PROMOTION_FAILED` | The atomic swap failed; the previous tree was restored. | Usually permissions or a cross-filesystem destination. Check the log for the path. |
-| `ROLLBACK_FAILED` | The job being rolled back to is not `succeeded`, or its backup is gone. | Roll back to a more recent successful job. |
+| `ROLLBACK_FAILED` | The backup source job is not `succeeded`/its backup is gone, or the requested GitHub commit is invalid or not in the branch history. | Choose a different restore point or commit. |
 | `LIMIT_EXCEEDED` | A configured limit was hit outside the archive checks. | Review **Settings**. |
 | `CONFIG_INVALID` | The deployment row is invalid (bad slug, type, repository name). | Edit the deployment; saving re-runs validation. |
 | `ENCRYPTION_UNAVAILABLE` | The vault cannot decrypt with the current key. | Restore the key file or `GITHUBSYNC_ENCRYPTION_KEY`, then reconnect GitHub. |
@@ -63,23 +63,30 @@ the log, not on jobs; see `docs/WEBHOOK-SETUP.md`.
 
 ## Rolling back
 
-**History → (a successful job) → Rollback**, or **Rollback** on the deployment
-detail page.
+The deployment detail page offers two paths back, both one click:
 
-Rollback does not re-download anything from GitHub. It:
+- **GitHub history** lists the latest commits on the configured branch. **Roll
+  back** on an older commit queues a deployment of that exact SHA. The SHA is
+  checked against the branch's recent commits before the job is accepted, and
+  the normal archive pipeline runs: download → validate → stage → back up the
+  live files → promote. The job is recorded with `trigger_type = rollback` and
+  no `rollback_of`.
+- **Backup restore points** lists earlier successful jobs whose local backup is
+  still present. **Roll back to this** restores those files without a GitHub
+  request:
 
-1. takes the backup recorded for *that* job
-   (`uploads/githubsync-backups/<deployment>/<job>-<sha>/`);
-2. copies it into a fresh staging directory;
-3. backs up the current live tree, so the rollback is itself reversible;
-4. promotes with the same atomic swap as a normal deploy;
-5. records a job with `trigger_type = rollback` and `rollback_of = <job id>`.
+  1. take the backup recorded for *that* job
+     (`uploads/githubsync-backups/<deployment>/<job>-<sha>/`);
+  2. copy it into a fresh staging directory;
+  3. back up the current live tree, so the rollback is itself reversible;
+  4. promote with the same atomic swap as a normal deploy;
+  5. record a job with `trigger_type = rollback` and `rollback_of = <job id>`.
 
-Requirements: the target job must be `succeeded`, and its backup directory must
-still exist with its manifest. Backups are pruned to `backup_retention` (default
-3, clamped 1–20) after each successful deployment, and on demand from
-**Tools → Cleanup**. Pruning is why an old job can no longer be the rollback
-target — deploy that commit again instead.
+Requirements for a backup restore: the target job must be `succeeded`, and its
+backup directory must still exist with its manifest. Backups are pruned to
+`backup_retention` (default 3, clamped 1–20) after each successful deployment,
+and on demand from **Tools → Cleanup**. When a backup has been pruned, use the
+GitHub history path instead.
 
 ## Backups on disk
 

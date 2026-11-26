@@ -45,6 +45,7 @@ final class Actions {
 			'githubsync_deploy_now',
 			'githubsync_retry_job',
 			'githubsync_rollback',
+			'githubsync_rollback_commit',
 			'githubsync_toggle_pause',
 			'githubsync_regenerate_secret',
 			'githubsync_save_connection_app',
@@ -94,6 +95,9 @@ final class Actions {
 				break;
 			case 'githubsync_rollback':
 				self::rollback();
+				break;
+			case 'githubsync_rollback_commit':
+				self::rollback_commit();
 				break;
 			case 'githubsync_toggle_pause':
 				self::toggle_pause();
@@ -425,6 +429,30 @@ final class Actions {
 
 		if ( is_wp_error( $result ) ) {
 			self::back_message( 'githubsync-deployment', $result->get_error_message(), 'error', array( 'id' => $id ) );
+		}
+
+		self::back( 'githubsync-deployment', 'rolledback', 'success', array( 'id' => $id ) );
+	}
+
+	/**
+	 * Queue a rollback to an earlier commit from GitHub history.
+	 *
+	 * @return void
+	 */
+	private static function rollback_commit() {
+		self::verify( 'githubsync_rollback_commit' );
+
+		$id  = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0;
+		$sha = isset( $_POST['commit_sha'] ) ? sanitize_text_field( wp_unslash( $_POST['commit_sha'] ) ) : '';
+
+		$result = ( new DeploymentManager() )->rollback_to_commit( $id, $sha );
+
+		if ( is_wp_error( $result ) ) {
+			self::back_message( 'githubsync-deployment', $result->get_error_message(), 'error', array( 'id' => $id ) );
+		}
+
+		if ( function_exists( 'spawn_cron' ) ) {
+			spawn_cron();
 		}
 
 		self::back( 'githubsync-deployment', 'rolledback', 'success', array( 'id' => $id ) );

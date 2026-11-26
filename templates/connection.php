@@ -9,40 +9,32 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 <div class="wrap gs-wrap">
-	<h1 class="gs-title"><?php esc_html_e( 'GitHub Connection', 'githubsync' ); ?></h1>
+	<?php
+	\GitHubSync\Admin\AdminMenu::page_head(
+		__( 'GitHub Connection', 'githubsync' ),
+		__( 'Choose how this site authenticates with GitHub. A GitHub App is recommended for long-term use.', 'githubsync' ),
+		'',
+		'plug'
+	);
+	?>
 
 	<div class="gs-status-line">
 		<span class="gs-status-line__state <?php echo $data['connected'] ? 'gs-ok' : 'gs-bad'; ?>">
 			<?php echo $data['connected'] ? esc_html__( 'Connected', 'githubsync' ) : esc_html__( 'Not connected', 'githubsync' ); ?>
 		</span>
 		<?php if ( $data['connected'] ) : ?>
-			<?php if ( $data['connected'] ) : ?>
-				<span class="gs-status-line__meta"><?php echo esc_html( $data['summary'] ); ?></span>
-			<?php endif; ?>
+			<span class="gs-status-line__meta"><?php echo esc_html( $data['summary'] ); ?></span>
 		<?php endif; ?>
-	</div>
 
-	<?php if ( ! $data['encryption_ok'] ) : ?>
-		<?php
-		\GitHubSync\Admin\AdminMenu::notice(
-			'error',
-			__( '<strong>Secure encryption is not configured</strong>, so credentials cannot be stored. Configure it on the Settings page first.', 'githubsync' )
-		);
-		?>
-		<p class="gs-actions">
-			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'githubsync' ); ?></a>
-		</p>
-	<?php endif; ?>
-
-	<?php if ( $data['connected'] ) : ?>
-		<div class="gs-status-line__actions">
+		<?php if ( $data['connected'] ) : ?>
+			<div class="gs-status-line__actions">
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
 					<?php wp_nonce_field( 'githubsync_test_connection' ); ?>
 					<input type="hidden" name="action" value="githubsync_test_connection">
-					<button type="submit" class="button"><?php esc_html_e( 'Test connection', 'githubsync' ); ?></button>
+					<button type="submit" class="button"><?php \GitHubSync\Admin\AdminMenu::icon( 'zap' ); ?> <?php esc_html_e( 'Test connection', 'githubsync' ); ?></button>
 				</form>
 
-				<a class="button" href="<?php echo esc_url( $data['browse_url'] ); ?>"><?php esc_html_e( 'Browse repositories', 'githubsync' ); ?></a>
+				<a class="button" href="<?php echo esc_url( $data['browse_url'] ); ?>"><?php \GitHubSync\Admin\AdminMenu::icon( 'search' ); ?> <?php esc_html_e( 'Browse repositories', 'githubsync' ); ?></a>
 
 				<form
 					method="post"
@@ -61,12 +53,37 @@ defined( 'ABSPATH' ) || exit;
 		<?php endif; ?>
 	</div>
 
+	<?php if ( ! $data['encryption_ok'] ) : ?>
+		<?php
+		\GitHubSync\Admin\AdminMenu::notice(
+			'error',
+			__( '<strong>Secure encryption is not configured</strong>, so credentials cannot be stored. Configure it on the Settings page first.', 'githubsync' )
+		);
+		?>
+		<p class="gs-actions">
+			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'githubsync' ); ?></a>
+		</p>
+	<?php endif; ?>
+
 	<?php if ( '' !== $data['error'] ) : ?>
 		<?php \GitHubSync\Admin\AdminMenu::notice( 'error', $data['error'] ); ?>
 	<?php endif; ?>
 
 	<?php if ( $data['browse'] ) : ?>
-		<h2 class="gs-section-title"><?php esc_html_e( 'Repositories', 'githubsync' ); ?></h2>
+		<div class="gs-section-head">
+			<h2 class="gs-section-title"><?php esc_html_e( 'Repositories', 'githubsync' ); ?></h2>
+			<?php if ( ! empty( $data['repos'] ) ) : ?>
+				<span class="gs-badge gs-badge--muted">
+					<?php
+					printf(
+						/* translators: %d: repository count on this page. */
+						esc_html__( '%d available', 'githubsync' ),
+						count( $data['repos'] )
+					);
+					?>
+				</span>
+			<?php endif; ?>
+		</div>
 
 		<?php if ( empty( $data['repos'] ) ) : ?>
 			<?php
@@ -77,7 +94,7 @@ defined( 'ABSPATH' ) || exit;
 			?>
 		<?php else : ?>
 			<div class="gs-table-wrap">
-				<table class="widefat striped gs-table">
+				<table class="gs-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Repository', 'githubsync' ); ?></th>
@@ -89,10 +106,10 @@ defined( 'ABSPATH' ) || exit;
 					<tbody>
 						<?php foreach ( $data['repos'] as $gs_repo ) : ?>
 							<tr>
-								<td><code><?php echo esc_html( $gs_repo['full_name'] ); ?></code></td>
-								<td><?php echo esc_html( $gs_repo['visibility'] ); ?></td>
-								<td><?php echo esc_html( $gs_repo['default_branch'] ); ?></td>
-								<td>
+								<td data-gs-label="<?php esc_attr_e( 'Repository', 'githubsync' ); ?>"><code><?php echo esc_html( $gs_repo['full_name'] ); ?></code></td>
+								<td data-gs-label="<?php esc_attr_e( 'Visibility', 'githubsync' ); ?>"><?php echo esc_html( $gs_repo['visibility'] ); ?></td>
+								<td data-gs-label="<?php esc_attr_e( 'Default branch', 'githubsync' ); ?>"><?php echo esc_html( $gs_repo['default_branch'] ); ?></td>
+								<td data-gs-label="<?php esc_attr_e( 'Use', 'githubsync' ); ?>">
 									<a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=githubsync-deployment-new&gs_repo=' . rawurlencode( $gs_repo['full_name'] ) ) ); ?>">
 										<?php esc_html_e( 'New deployment', 'githubsync' ); ?>
 									</a>
@@ -136,16 +153,23 @@ defined( 'ABSPATH' ) || exit;
 		<?php endif; ?>
 	<?php endif; ?>
 
-	<h2 class="gs-section-title"><?php esc_html_e( 'Connect a GitHub App (recommended)', 'githubsync' ); ?></h2>
+	<div class="gs-section-head">
+		<h2 class="gs-section-title"><?php esc_html_e( 'Connect a GitHub App', 'githubsync' ); ?></h2>
+		<span class="gs-badge gs-badge--success"><?php esc_html_e( 'Recommended', 'githubsync' ); ?></span>
+	</div>
+
 	<div class="gs-card">
 		<?php if ( ! empty( $data['manifest']['callback'] ) ) : ?>
 			<?php $gs_cb = $data['manifest']['callback']; ?>
-			<p class="<?php echo 'error' === $gs_cb['type'] ? 'gs-bad' : ( 'warning' === $gs_cb['type'] ? 'gs-warn' : 'gs-ok' ); ?>">
-				<?php echo esc_html( $gs_cb['message'] ); ?>
-			</p>
+			<?php
+			\GitHubSync\Admin\AdminMenu::notice(
+				$gs_cb['type'],
+				$gs_cb['message']
+			);
+			?>
 			<?php if ( '' !== $gs_cb['install_url'] ) : ?>
 				<p class="gs-actionbar">
-					<a class="button button-primary" href="<?php echo esc_url( $gs_cb['install_url'] ); ?>"><?php esc_html_e( 'Install the App on GitHub', 'githubsync' ); ?></a>
+					<a class="button button-primary" href="<?php echo esc_url( $gs_cb['install_url'] ); ?>"><?php \GitHubSync\Admin\AdminMenu::icon( 'external' ); ?> <?php esc_html_e( 'Install the App on GitHub', 'githubsync' ); ?></a>
 				</p>
 			<?php endif; ?>
 		<?php endif; ?>
@@ -172,7 +196,7 @@ defined( 'ABSPATH' ) || exit;
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
 					<?php wp_nonce_field( 'githubsync_begin_app_manifest' ); ?>
 					<input type="hidden" name="action" value="githubsync_begin_app_manifest">
-					<button type="submit" class="button button-primary"><?php esc_html_e( 'Create GitHub App', 'githubsync' ); ?></button>
+					<button type="submit" class="button button-primary"><?php \GitHubSync\Admin\AdminMenu::icon( 'plus' ); ?> <?php esc_html_e( 'Create GitHub App', 'githubsync' ); ?></button>
 				</form>
 			<?php endif; ?>
 		<?php else : ?>
@@ -189,7 +213,7 @@ defined( 'ABSPATH' ) || exit;
 
 			<p class="gs-actionbar">
 				<?php if ( '' !== $data['manifest']['install_url'] ) : ?>
-					<a class="button" href="<?php echo esc_url( $data['manifest']['install_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Install App on GitHub', 'githubsync' ); ?></a>
+					<a class="button" href="<?php echo esc_url( $data['manifest']['install_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php \GitHubSync\Admin\AdminMenu::icon( 'external' ); ?> <?php esc_html_e( 'Install App on GitHub', 'githubsync' ); ?></a>
 				<?php endif; ?>
 
 				<?php if ( '' !== $data['manifest']['app_meta']['html_url'] ) : ?>
@@ -200,7 +224,7 @@ defined( 'ABSPATH' ) || exit;
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
 						<?php wp_nonce_field( 'githubsync_download_app_key' ); ?>
 						<input type="hidden" name="action" value="githubsync_download_app_key">
-						<button type="submit" class="button"><?php esc_html_e( 'Download private key', 'githubsync' ); ?></button>
+						<button type="submit" class="button"><?php \GitHubSync\Admin\AdminMenu::icon( 'key' ); ?> <?php esc_html_e( 'Download private key', 'githubsync' ); ?></button>
 					</form>
 				<?php endif; ?>
 			</p>
@@ -247,40 +271,45 @@ defined( 'ABSPATH' ) || exit;
 
 	<details class="gs-card"<?php echo $data['manifest']['supported'] ? '' : ' open'; ?>>
 		<summary><strong><?php esc_html_e( 'Connect an existing GitHub App manually', 'githubsync' ); ?></strong></summary>
-		<p class="gs-muted">
-			<?php esc_html_e( 'Create a GitHub App, install it on the repositories you want to deploy, and paste its App ID, installation ID and private key below. Request only Metadata (read) and Contents (read).', 'githubsync' ); ?>
-		</p>
+		<div class="gs-panel__body">
+			<p class="gs-muted">
+				<?php esc_html_e( 'Create a GitHub App, install it on the repositories you want to deploy, and paste its App ID, installation ID and private key below. Request only Metadata (read) and Contents (read).', 'githubsync' ); ?>
+			</p>
 
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form">
-			<?php wp_nonce_field( 'githubsync_save_connection_app' ); ?>
-			<input type="hidden" name="action" value="githubsync_save_connection_app">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form">
+				<?php wp_nonce_field( 'githubsync_save_connection_app' ); ?>
+				<input type="hidden" name="action" value="githubsync_save_connection_app">
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><label for="gs-app-id"><?php esc_html_e( 'App ID', 'githubsync' ); ?></label></th>
-					<td><input type="text" id="gs-app-id" name="app_id" class="regular-text" value="<?php echo esc_attr( 'app' === $data['connection']['mode'] ? $data['connection']['app_id'] : '' ); ?>"></td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="gs-installation"><?php esc_html_e( 'Installation ID', 'githubsync' ); ?></label></th>
-					<td>
-						<input type="text" id="gs-installation" name="installation_id" class="regular-text" value="<?php echo esc_attr( 'app' === $data['connection']['mode'] ? $data['connection']['installation_id'] : '' ); ?>">
-						<p class="description"><?php esc_html_e( 'Found in the URL of the installation settings page.', 'githubsync' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="gs-key"><?php esc_html_e( 'Private key (PEM)', 'githubsync' ); ?></label></th>
-					<td>
-						<textarea id="gs-key" name="private_key" rows="8" class="large-text code" placeholder="-----BEGIN RSA PRIVATE KEY-----"></textarea>
-						<p class="description"><?php esc_html_e( 'Paste the contents of the .pem file. It is encrypted before storage and never displayed again.', 'githubsync' ); ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="gs-app-id"><?php esc_html_e( 'App ID', 'githubsync' ); ?></label></th>
+						<td><input type="text" id="gs-app-id" name="app_id" class="regular-text" value="<?php echo esc_attr( 'app' === $data['connection']['mode'] ? $data['connection']['app_id'] : '' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gs-installation"><?php esc_html_e( 'Installation ID', 'githubsync' ); ?></label></th>
+						<td>
+							<input type="text" id="gs-installation" name="installation_id" class="regular-text" value="<?php echo esc_attr( 'app' === $data['connection']['mode'] ? $data['connection']['installation_id'] : '' ); ?>">
+							<p class="description"><?php esc_html_e( 'Found in the URL of the installation settings page.', 'githubsync' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gs-key"><?php esc_html_e( 'Private key (PEM)', 'githubsync' ); ?></label></th>
+						<td>
+							<textarea id="gs-key" name="private_key" rows="8" class="large-text code" placeholder="-----BEGIN RSA PRIVATE KEY-----"></textarea>
+							<p class="description"><?php esc_html_e( 'Paste the contents of the .pem file. It is encrypted before storage and never displayed again.', 'githubsync' ); ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save GitHub App connection', 'githubsync' ); ?></button></p>
-		</form>
+				<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save GitHub App connection', 'githubsync' ); ?></button></p>
+			</form>
+		</div>
 	</details>
 
-	<h2 class="gs-section-title"><?php esc_html_e( 'Or use a personal access token', 'githubsync' ); ?></h2>
+	<div class="gs-section-head">
+		<h2 class="gs-section-title"><?php esc_html_e( 'Or use a personal access token', 'githubsync' ); ?></h2>
+	</div>
+
 	<div class="gs-card">
 		<p class="gs-muted">
 			<?php esc_html_e( 'A fine-grained token with Contents (read) and Metadata (read) works, but a GitHub App is preferred for long-term use because it is scoped to an installation and can be revoked centrally.', 'githubsync' ); ?>

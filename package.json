@@ -1,0 +1,13 @@
+{
+  "name": "githubsync",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Build tooling for the GitHubSync admin UI (Tailwind CSS).",
+  "scripts": {
+    "build:css": "tailwindcss -i ./assets/css/tailwind.css -o ./assets/css/admin.css --minify",
+    "watch:css": "tailwindcss -i ./assets/css/tailwind.css -o ./assets/css/admin.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

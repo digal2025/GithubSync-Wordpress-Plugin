@@ -252,8 +252,17 @@ pipeline runs as for a webhook: queue → download → validate → stage → ba
 verify → promote → verify. The job appears immediately in **History** with live
 status.
 
-Retry a failed job from the History row, or roll back to a previous successful
-one with **Rollback**.
+Retry a failed job from the History row. On the deployment detail screen there
+are two ways back:
+
+- **GitHub history** lists the latest commits on the configured branch. Click
+  **Roll back** on any older commit to queue a deployment of that exact commit.
+- **Backup restore points** lists earlier successful jobs whose verified local
+  backup still exists. Click **Roll back to this** to restore those files.
+
+Both paths take a verified backup of the current files before replacing them,
+so a rollback can itself be undone. A commit is only accepted if it appears in
+the deployment's branch history.
 
 ## Automatic deployment
 
@@ -379,6 +388,25 @@ php tests/run-tests.php
 ```
 
 See [`docs/TESTING.md`](docs/TESTING.md) for what is covered and what is not.
+
+### Admin UI build
+
+The admin screens are styled with Tailwind CSS, compiled to a single file. The
+compiled `assets/css/admin.css` is committed, so installing the plugin never
+needs Node. Only edit the source when changing the UI:
+
+```bash
+npm install            # once
+npm run build:css      # writes assets/css/admin.css
+npm run watch:css      # optional: rebuild while editing
+```
+
+`assets/css/tailwind.css` is the source. Tailwind runs with the `tw-` prefix and
+preflight disabled, so its utilities cannot collide with wp-admin. Component
+classes (`gs-card`, `gs-badge`, `gs-table`, …) live in that file and are the
+hooks the templates, tests and admin.js rely on. The source stylesheet,
+`package.json` and `tailwind.config.js` are excluded from the release archive by
+`.distignore`; only the compiled CSS ships.
 
 Build a release archive with `./build.sh`. It lints every PHP file, copies the
 plugin while honouring `.distignore` (no tests, docs, or key files), and writes

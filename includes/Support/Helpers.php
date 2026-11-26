@@ -217,6 +217,26 @@ final class Helpers {
 	}
 
 	/**
+	 * Render an absolute path relative to the WordPress root when it is inside it.
+	 *
+	 * Admin screens show destinations such as wp-content/plugins/my-plugin; the
+	 * absolute prefix is noise there. Paths outside the root are unchanged.
+	 *
+	 * @param string $path Absolute filesystem path.
+	 * @return string
+	 */
+	public static function relative_path( $path ) {
+		$path = (string) $path;
+		$root = trailingslashit( wp_normalize_path( ABSPATH ) );
+
+		if ( '' !== $path && 0 === strpos( $path, $root ) ) {
+			return ltrim( substr( $path, strlen( $root ) ), '/' );
+		}
+
+		return $path;
+	}
+
+	/**
 	 * Plugin setting with a default.
 	 *
 	 * @param string $key     Setting key.

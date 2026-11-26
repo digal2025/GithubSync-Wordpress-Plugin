@@ -19,6 +19,13 @@
 /composer.lock
 /vendor
 
+# Admin UI build tooling. The compiled assets/css/admin.css does ship; the
+# Tailwind source, config and npm metadata are development-only.
+/package.json
+/package-lock.json
+/tailwind.config.js
+/assets/css/tailwind.css
+
 # Docs and changelog ship in the repository, not in the plugin zip
 /docs
 /docs/**

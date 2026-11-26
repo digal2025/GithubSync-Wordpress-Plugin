@@ -6,6 +6,38 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-25
+
+### Added
+
+- **One-click rollback from GitHub history.** The deployment detail screen lists
+  recent commits from the configured branch with a *Roll back* button on each
+  older commit. The commit SHA is checked against the branch history before a
+  job is queued, and the normal deployment pipeline backs up the live files
+  before promoting the older commit. Backup-backed restore points remain
+  available beside it.
+
+### Changed
+
+- **The admin UI is rebuilt with Tailwind CSS as a small, quiet design system.**
+  Screens use plain page headers, simple cards, restrained badges, consistent
+  buttons, alerts, progress and responsive tables. There are no gradients,
+  hero banners or decorative carousels. The stylesheet is compiled to
+  `assets/css/admin.css`, so installed sites still have no runtime dependencies.
+- Add/Edit Deployment is split into numbered Source, Destination and Behaviour
+  panels with a compact help column, instead of one long form table.
+- Dashboard, Deployments, Deployment detail, History, Connection, Settings and
+  Tools all use the same cards, tables, empty states and notices.
+- The setup checklist is now a single scrollable list inside its dialog, with a
+  progress bar, rather than a step carousel.
+- Tailwind runs with a `tw-` prefix and preflight disabled, so nothing leaks
+  into the rest of wp-admin.
+
+### Fixed
+
+- The confirmation dialog and copy buttons keep their existing hooks and
+  behaviour under the new styles.
+
 ## [0.1.8] - 2026-11-25
 
 ### Changed

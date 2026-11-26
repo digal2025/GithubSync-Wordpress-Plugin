@@ -199,7 +199,9 @@ final class DeploymentManager {
 			throw new GitHubSyncException( ErrorCodes::CONFIG_INVALID, 'Repository and branch are required.' );
 		}
 
-		if ( 'rollback' === $job['trigger_type'] ) {
+		// Backup-backed rollbacks carry a source job. A rollback to a GitHub
+		// commit has no source job and is deployed from the commit archive.
+		if ( 'rollback' === $job['trigger_type'] && (int) $job['rollback_of'] > 0 ) {
 			$this->execute_rollback( $job, $config, $lock_token );
 			return;
 		}
@@ -760,6 +762,56 @@ final class DeploymentManager {
 		$queue = new Queue( $this->jobs );
 
 		return $queue->enqueue( $deployment_id, (string) $source['commit_sha'], 'rollback', 1, (int) $source_job_id );
+	}
+
+	/**
+	 * Queue a one-click rollback to an earlier commit from GitHub history.
+	 *
+	 * The SHA must appear in the configured branch's recent history, so a
+	 * crafted request cannot deploy code from another branch or repository.
+	 * The normal deployment pipeline takes a verified backup of the live
+	 * files before promoting the older commit.
+	 *
+	 * @param int    $deployment_id Deployment ID.
+	 * @param string $sha           Commit SHA.
+	 * @return int|\WP_Error Job ID.
+	 */
+	public function rollback_to_commit( $deployment_id, $sha ) {
+		$sha = strtolower( trim( (string) $sha ) );
+
+		if ( ! preg_match( '/^[a-f0-9]{40,64}$/', $sha ) ) {
+			return new \WP_Error( ErrorCodes::ROLLBACK_FAILED, __( 'That is not a valid commit SHA.', 'githubsync' ) );
+		}
+
+		$row = $this->deployments->find( $deployment_id );
+
+		if ( ! $row ) {
+			return new \WP_Error( ErrorCodes::CONFIG_INVALID, __( 'Configuration not found.', 'githubsync' ) );
+		}
+
+		$config  = new DeploymentConfiguration( $row );
+		$commits = $this->api->commits( $config->repository(), $config->branch(), 20 );
+
+		if ( is_wp_error( $commits ) ) {
+			return $commits;
+		}
+
+		$found = false;
+
+		foreach ( $commits as $commit ) {
+			if ( $commit['sha'] === $sha ) {
+				$found = true;
+				break;
+			}
+		}
+
+		if ( ! $found ) {
+			return new \WP_Error( ErrorCodes::ROLLBACK_FAILED, __( 'That commit is not in this deployment’s branch history.', 'githubsync' ) );
+		}
+
+		$queue = new Queue( $this->jobs );
+
+		return $queue->enqueue( $deployment_id, $sha, 'rollback', 1, 0 );
 	}
 
 	/**

@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.1.8
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,6 +96,11 @@ system cron or use *Run queue now*.
 4. History of jobs across all deployments.
 
 == Changelog ==
+
+= 0.2.0 =
+* Minimal admin redesign built with Tailwind CSS: simple page headers, cards, buttons, alerts, progress bars, responsive tables and consistent empty states across every screen.
+* One-click rollback to an earlier commit from GitHub history, alongside the existing backup restore points.
+* The compiled stylesheet ships with the plugin; no Node or build tools are needed on a live site.
 
 = 0.1.2 =
 * The dashboard setup checklist now opens in a modal dialog from a "Show setup checklist" button, instead of occupying the top of the dashboard. The carousel, step dots and the close-only-when-complete rule are unchanged.

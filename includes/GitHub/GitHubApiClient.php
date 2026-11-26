@@ -317,6 +317,58 @@ final class GitHubApiClient {
 	}
 
 	/**
+	 * Recent commits on a branch, newest first.
+	 *
+	 * Used by the deployment screen to offer one-click rollbacks to earlier
+	 * GitHub commits. The branch is passed explicitly so a commit from an
+	 * unrelated branch is never offered.
+	 *
+	 * @param string $full_name owner/repo.
+	 * @param string $branch    Branch name.
+	 * @param int    $limit     Maximum commits (1-100).
+	 * @return array|\WP_Error List of { sha, message, author, date, url }.
+	 */
+	public function commits( $full_name, $branch, $limit = 10 ) {
+		$full_name = trim( (string) $full_name, '/' );
+		$response  = $this->request(
+			'GET',
+			'/repos/' . $full_name . '/commits',
+			array(
+				'sha'      => (string) $branch,
+				'per_page' => max( 1, min( 100, (int) $limit ) ),
+			)
+		);
+
+		if ( ! $response->is_ok() || ! is_array( $response->data ) ) {
+			return $this->to_error( $response );
+		}
+
+		$items = array();
+
+		foreach ( $response->data as $commit ) {
+			if ( ! is_array( $commit ) || empty( $commit['sha'] ) || ! preg_match( '/^[a-f0-9]{40,64}$/i', (string) $commit['sha'] ) ) {
+				continue;
+			}
+
+			$message = isset( $commit['commit']['message'] ) ? sanitize_text_field( (string) $commit['commit']['message'] ) : '';
+			$lines   = explode( "\n", $message );
+			$author  = isset( $commit['commit']['author']['name'] ) ? (string) $commit['commit']['author']['name'] : '';
+			$date    = isset( $commit['commit']['author']['date'] ) ? (string) $commit['commit']['author']['date'] : '';
+			$url     = isset( $commit['html_url'] ) ? (string) $commit['html_url'] : '';
+
+			$items[] = array(
+				'sha'     => strtolower( (string) $commit['sha'] ),
+				'message' => isset( $lines[0] ) ? $lines[0] : '',
+				'author'  => sanitize_text_field( $author ),
+				'date'    => sanitize_text_field( $date ),
+				'url'     => 0 === strpos( $url, 'https://github.com/' ) ? esc_url_raw( $url ) : '',
+			);
+		}
+
+		return $items;
+	}
+
+	/**
 	 * Commit metadata (message) for display.
 	 *
 	 * @param string $full_name owner/repo.
