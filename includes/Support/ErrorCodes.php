@@ -37,6 +37,9 @@ final class ErrorCodes {
 	public const CONFIG_INVALID          = 'CONFIG_INVALID';
 	public const ENCRYPTION_UNAVAILABLE  = 'ENCRYPTION_UNAVAILABLE';
 	public const LIMIT_EXCEEDED          = 'LIMIT_EXCEEDED';
+	public const UPDATE_NOT_CONFIGURED   = 'UPDATE_NOT_CONFIGURED';
+	public const UPDATE_MANIFEST_INVALID = 'UPDATE_MANIFEST_INVALID';
+	public const UPDATE_PACKAGE_INVALID  = 'UPDATE_PACKAGE_INVALID';
 	public const INTERNAL_ERROR          = 'INTERNAL_ERROR';
 
 	/**
@@ -95,6 +98,9 @@ final class ErrorCodes {
 			self::CONFIG_INVALID           => __( 'The deployment configuration is invalid.', 'githubsync' ),
 			self::ENCRYPTION_UNAVAILABLE   => __( 'Secure credential encryption is not configured.', 'githubsync' ),
 			self::LIMIT_EXCEEDED           => __( 'A configured file count or size limit was exceeded.', 'githubsync' ),
+			self::UPDATE_NOT_CONFIGURED    => __( 'No plugin update feed is configured.', 'githubsync' ),
+			self::UPDATE_MANIFEST_INVALID  => __( 'The plugin update manifest is invalid or could not be read.', 'githubsync' ),
+			self::UPDATE_PACKAGE_INVALID   => __( 'The plugin update package failed its checksum verification.', 'githubsync' ),
 			self::INTERNAL_ERROR           => __( 'An unexpected internal error occurred.', 'githubsync' ),
 		);
 

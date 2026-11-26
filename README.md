@@ -374,6 +374,7 @@ constant) after uninstalling.
 - [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and controls.
 - [`docs/WEBHOOK-SETUP.md`](docs/WEBHOOK-SETUP.md) — exact webhook steps.
 - [`docs/DEPLOYMENT-RECOVERY.md`](docs/DEPLOYMENT-RECOVERY.md) — backups, rollback, manual recovery.
+- [`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md) — automatic update notices, the release feed and checksums.
 - [`docs/TESTING.md`](docs/TESTING.md) — local test environment and commands.
 - [`docs/SPEC-COVERAGE.md`](docs/SPEC-COVERAGE.md) — feature-by-feature audit against the specification.
 
@@ -434,6 +435,12 @@ git push origin v0.1.0
 Then on GitHub: **Releases → Draft a new release**, choose tag `v0.1.0`, title
 `GitHubSync 0.1.0`, paste the matching `CHANGELOG.md` section, and attach
 `dist/githubsync.zip` as the release asset. Publish.
+
+Pushing `v*` tags also runs the `release` job, which mirrors the zip and
+`update.json` to the public [`digal2025/githubsync-releases`](https://github.com/digal2025/githubsync-releases)
+repository. That is what makes installed sites see the update. It needs a
+`RELEASES_TOKEN` secret with write access to that repository; see
+[`docs/SELF-UPDATE.md`](docs/SELF-UPDATE.md).
 
 Installing the asset:
 

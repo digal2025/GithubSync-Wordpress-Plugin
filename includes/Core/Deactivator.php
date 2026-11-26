@@ -8,6 +8,7 @@
 namespace GitHubSync\Core;
 
 use GitHubSync\Queue\Queue;
+use GitHubSync\Update\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -24,5 +25,6 @@ final class Deactivator {
 	 */
 	public static function deactivate() {
 		Queue::unschedule_all();
+		Updater::unschedule();
 	}
 }

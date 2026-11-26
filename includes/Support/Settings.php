@@ -31,6 +31,7 @@ final class Settings {
 			'log_retention_days'   => 30,
 			'max_webhook_bytes'    => 1048576,
 			'max_attempts'         => 3,
+			'self_update_enabled'  => 1,
 			'delete_data_on_uninstall' => 0,
 		);
 	}
@@ -76,6 +77,7 @@ final class Settings {
 		$out['log_retention_days']  = self::clamp( isset( $input['log_retention_days'] ) ? $input['log_retention_days'] : 30, 1, 365 );
 		$out['max_webhook_bytes']   = self::clamp( isset( $input['max_webhook_bytes'] ) ? $input['max_webhook_bytes'] : 1048576, 1024, 10485760 );
 		$out['max_attempts']        = self::clamp( isset( $input['max_attempts'] ) ? $input['max_attempts'] : 3, 1, 10 );
+		$out['self_update_enabled'] = empty( $input['self_update_enabled'] ) ? 0 : 1;
 		$out['delete_data_on_uninstall'] = empty( $input['delete_data_on_uninstall'] ) ? 0 : 1;
 
 		return $out;

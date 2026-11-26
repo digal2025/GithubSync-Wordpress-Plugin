@@ -23,6 +23,7 @@ use GitHubSync\Security\CredentialVault;
 use GitHubSync\Security\InputValidator;
 use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
+use GitHubSync\Update\Updater;
 use GitHubSync\Webhooks\SignatureVerifier;
 
 defined( 'ABSPATH' ) || exit;
@@ -57,6 +58,7 @@ final class Actions {
 			'githubsync_disconnect',
 			'githubsync_test_connection',
 			'githubsync_save_settings',
+			'githubsync_check_update',
 			'githubsync_generate_key',
 			'githubsync_clear_logs',
 			'githubsync_run_queue',
@@ -131,6 +133,9 @@ final class Actions {
 				break;
 			case 'githubsync_save_settings':
 				self::save_settings();
+				break;
+			case 'githubsync_check_update':
+				self::check_update();
 				break;
 			case 'githubsync_generate_key':
 				self::generate_key();
@@ -757,6 +762,37 @@ final class Actions {
 	}
 
 	/**
+	 * Fetch the release feed now and refresh the WordPress update list.
+	 *
+	 * @return void
+	 */
+	private static function check_update() {
+		self::verify( 'githubsync_check_update' );
+
+		if ( ! Updater::enabled() ) {
+			self::back( 'githubsync-settings', 'update_disabled', 'warning' );
+		}
+
+		Updater::flush_cache();
+
+		$release = Updater::get_release( true );
+
+		if ( is_wp_error( $release ) ) {
+			Updater::record_error( $release );
+			self::back_message( 'githubsync-settings', $release->get_error_message() );
+		}
+
+		Updater::record_release( $release );
+		Updater::request_check( false );
+
+		if ( Updater::is_newer( $release['version'] ) ) {
+			self::back( 'githubsync-settings', 'update_available', 'warning' );
+		}
+
+		self::back( 'githubsync-settings', 'update_current' );
+	}
+
+	/**
 	 * Save settings.
 	 *
 	 * @return void
@@ -767,6 +803,9 @@ final class Actions {
 		$input = isset( $_POST['githubsync'] ) && is_array( $_POST['githubsync'] ) ? wp_unslash( $_POST['githubsync'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		update_option( Settings::OPTION, Settings::sanitize( $input ), false );
+
+		$url = isset( $_POST['update_url'] ) ? wp_unslash( $_POST['update_url'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		Updater::save_manifest_url( is_string( $url ) ? $url : '' );
 
 		self::back( 'githubsync-settings', 'settings_saved' );
 	}

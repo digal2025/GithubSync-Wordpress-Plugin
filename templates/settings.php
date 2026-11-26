@@ -101,6 +101,25 @@ $gs_settings = $data['settings'];
 					<td><input type="number" id="gs-attempts" name="githubsync[max_attempts]" min="1" max="10" value="<?php echo esc_attr( (string) $gs_settings['max_attempts'] ); ?>"></td>
 				</tr>
 				<tr>
+					<th scope="row"><?php esc_html_e( 'Self-updates', 'githubsync' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="githubsync[self_update_enabled]" value="1" <?php checked( (int) $gs_settings['self_update_enabled'], 1 ); ?> <?php disabled( $data['update_locked'] ); ?>>
+							<?php esc_html_e( 'Show GitHubSync updates on the Plugins screen and allow one-click updates', 'githubsync' ); ?>
+						</label>
+						<?php if ( $data['update_locked'] ) : ?>
+							<p class="description"><?php esc_html_e( 'Controlled by the GITHUBSYNC_DISABLE_SELF_UPDATE constant.', 'githubsync' ); ?></p>
+						<?php endif; ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="gs-update-url"><?php esc_html_e( 'Release feed URL', 'githubsync' ); ?></label></th>
+					<td>
+						<input type="url" id="gs-update-url" name="update_url" class="regular-text" value="<?php echo esc_attr( $data['update_url'] ); ?>" placeholder="https://example.com/update.json">
+						<p class="description"><?php esc_html_e( 'Leave the public release feed URL in place unless you host your own manifest.', 'githubsync' ); ?></p>
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><?php esc_html_e( 'Uninstall', 'githubsync' ); ?></th>
 					<td>
 						<label>
@@ -113,6 +132,20 @@ $gs_settings = $data['settings'];
 			</table>
 
 			<p class="submit"><button type="submit" class="button button-primary"><?php esc_html_e( 'Save settings', 'githubsync' ); ?></button></p>
+		</form>
+	</div>
+
+	<div class="gs-card">
+		<h2><?php \GitHubSync\Admin\AdminMenu::icon( 'refresh' ); ?> <?php esc_html_e( 'Plugin updates', 'githubsync' ); ?></h2>
+		<p class="gs-muted"><?php echo esc_html( $data['update_status'] ); ?></p>
+		<p class="gs-muted"><?php esc_html_e( 'New versions appear on Plugins and Dashboard → Updates, with release notes and a one-click update link. Every package is verified against a SHA-256 digest before installation.', 'githubsync' ); ?></p>
+		<?php if ( $data['update_on'] ) : ?>
+			<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'update-core.php' ) ); ?>"><?php esc_html_e( 'Go to Dashboard → Updates', 'githubsync' ); ?></a></p>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-form gs-inline">
+			<?php wp_nonce_field( 'githubsync_check_update' ); ?>
+			<input type="hidden" name="action" value="githubsync_check_update">
+			<button type="submit" class="button"><?php \GitHubSync\Admin\AdminMenu::icon( 'refresh' ); ?> <?php esc_html_e( 'Check for updates now', 'githubsync' ); ?></button>
 		</form>
 	</div>
 </div>

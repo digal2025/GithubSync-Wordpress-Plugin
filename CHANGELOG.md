@@ -6,6 +6,24 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-26
+
+### Added
+
+- **Automatic plugin updates.** GitHubSync now checks a signed update manifest
+  twice a day and shows new versions on **Plugins** and **Dashboard → Updates**,
+  just like a WordPress.org plugin. Admins can see release notes and update with
+  one click. Downloads are checked against the SHA-256 digest in the manifest
+  before WordPress installs them. The public feed is built in, so no setup is
+  needed.
+- Self-updates are on by default and can be switched off with the **Self-updates**
+  checkbox on **GitHubSync → Settings** or the
+  `GITHUBSYNC_DISABLE_SELF_UPDATE` constant. The feed URL can be changed with
+  `GITHUBSYNC_UPDATE_URL`.
+- A `v*` tag now builds, verifies and publishes `githubsync.zip` plus `update.json`
+  to the public download repository, so a release automatically becomes an
+  update notice on installed sites.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added

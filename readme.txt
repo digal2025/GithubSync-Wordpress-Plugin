@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,7 @@ Features:
 * Action Scheduler support when available; WP-Cron otherwise, with a recovery
   tick so missed events do not strand a job.
 * Server-rendered admin screens; no JavaScript build step.
+* Automatic update notices with release notes and one-click updates from the public release feed, with SHA-256 verification of every download.
 
 == Installation ==
 
@@ -77,6 +78,12 @@ Yes. Each successful deployment keeps a verified backup (three per deployment by
 default). Any retained backup can be promoted again from the deployment detail
 screen.
 
+= How do I update GitHubSync? =
+
+New versions appear on *Plugins* and *Dashboard → Updates* automatically. The
+update feed is built in; self-updates can be turned off in *GitHubSync →
+Settings* or with `GITHUBSYNC_DISABLE_SELF_UPDATE`.
+
 = Does it support multisite? =
 
 Not in this release. Multisite is detected and a warning is shown.
@@ -97,6 +104,11 @@ system cron or use *Run queue now*.
 
 == Changelog ==
 
+= 0.3.0 =
+* Automatic plugin updates: new versions appear on the Plugins screen and Dashboard, with release notes and one-click updates.
+* Every update package is verified against a SHA-256 digest from the release manifest.
+* Self-updates are enabled by default; disable them in Settings or with GITHUBSYNC_DISABLE_SELF_UPDATE.
+
 = 0.2.0 =
 * Minimal admin redesign built with Tailwind CSS: simple page headers, cards, buttons, alerts, progress bars, responsive tables and consistent empty states across every screen.
 * One-click rollback to an earlier commit from GitHub history, alongside the existing backup restore points.
@@ -114,6 +126,9 @@ system cron or use *Run queue now*.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.3.0 =
+Adds automatic update notices and one-click plugin updates. Self-updates are enabled by default and can be turned off in Settings.
 
 = 0.1.2 =
 Moves the dashboard setup checklist into a dialog. No settings change needed.

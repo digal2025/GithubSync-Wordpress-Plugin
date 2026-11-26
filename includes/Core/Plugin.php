@@ -19,6 +19,7 @@ use GitHubSync\Filesystem\FilesystemAdapter;
 use GitHubSync\Queue\Queue;
 use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
+use GitHubSync\Update\Updater;
 use GitHubSync\Webhooks\WebhookController;
 
 defined( 'ABSPATH' ) || exit;
@@ -74,6 +75,8 @@ final class Plugin {
 		add_action( 'githubsync_cleanup', array( __CLASS__, 'cleanup' ) );
 
 		add_filter( 'plugin_action_links_' . plugin_basename( GITHUBSYNC_FILE ), array( __CLASS__, 'action_links' ) );
+
+		Updater::register();
 
 		if ( Helpers::is_multisite() ) {
 			add_action( 'admin_notices', array( __CLASS__, 'multisite_notice' ) );

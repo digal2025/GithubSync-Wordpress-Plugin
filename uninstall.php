@@ -36,6 +36,9 @@ $options = array(
 	'githubsync_github_app_key',
 	'githubsync_github_pat',
 	'githubsync_activated_at',
+	'githubsync_update_status',
+	'githubsync_update_url',
+	'githubsync_update_checked_at',
 );
 
 foreach ( $options as $option ) {

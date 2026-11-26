@@ -59,7 +59,7 @@ GitHubSync reconstructed test suite
 PHP 8.4.8 | WordPress 7.1.5
 
 --------------------------------------------
-Assertions: 329  Passed: 329  Failed: 0  Skipped: 0
+Assertions: 577  Passed: 577  Failed: 0  Skipped: 0
 
 RESULT: PASS
 ```
@@ -74,6 +74,8 @@ RESULT: PASS
 | `06-input-destination.php` | `InputValidator` and `DestinationPolicy`: repository names, branches, slugs, and the approved destination roots. |
 | `07-backup-promotion.php` | `BackupManager` → `PromotionManager` → rollback against a real filesystem, including corrupted-backup refusal and pruning. |
 | `08-github-auth.php` | `GitHubAuth` state machine and credential storage (PAT/App validation, encrypted options, disconnect), `GitHubApiClient::to_error()` status→code mapping, rate-limit detection, and a `pre_http_request` spy proving the bearer token is sent but never written to a log row. |
+| `13-github-rollback.php` | Deployment detail history table, rollback action wiring and commit SHA validation. |
+| `14-self-update.php` | Manifest validation, default feed, version comparison, update notice, checksum gate and plugin details dialog. |
 
 The suite also records **`FINDING:`** assertions — places where the code does
 something the spec does not justify, kept as passing tests that document the
