@@ -207,6 +207,23 @@ final class BackupManager {
 	}
 
 	/**
+	 * Bytes used by backups for one deployment.
+	 *
+	 * @param int $deployment_id Deployment ID.
+	 * @return int
+	 */
+	public function usage_for( $deployment_id ) {
+		$dir = $this->root() . '/' . (int) $deployment_id;
+
+		if ( ! is_dir( $dir ) ) {
+			return 0;
+		}
+
+		$stats = $this->fs->stats( $dir );
+		return (int) $stats['bytes'];
+	}
+
+	/**
 	 * Number of verified backups across all deployments.
 	 *
 	 * @return int

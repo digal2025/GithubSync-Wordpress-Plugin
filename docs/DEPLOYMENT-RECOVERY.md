@@ -87,7 +87,9 @@ backup directory must still exist with its manifest. Backups are pruned to
 `backup_retention` (default 3, clamped 1–20) after each successful deployment.
 Use **Clear old backups** on **GitHubSync → Settings → Backups** or
 **GitHubSync → Tools → Maintenance** to remove older backups on demand; the
-newest `backup_retention` backups stay in place. When a backup has been cleared,
+newest `backup_retention` backups stay in place. **GitHubSync → History → Clear
+history** removes finished job records and their log entries, but keeps active
+jobs, deployed files and every retained backup. When a backup has been cleared,
 use the GitHub history path instead.
 
 ## Backups on disk

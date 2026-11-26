@@ -6,6 +6,16 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-26
+
+### Added
+
+- A **Clear history** button on **GitHubSync → History** removes finished,
+  failed and cancelled deployment jobs and their log entries. Active jobs,
+  deployed files and backups are kept.
+- The **Deployments** list now shows each deployment’s on-disk size, file count
+  and backup disk usage.
+
 ## [0.4.0] - 2026-11-26
 
 ### Added

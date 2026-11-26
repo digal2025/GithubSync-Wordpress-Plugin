@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,8 @@ Features:
 * Verified backups, one-click rollback, and exponential-backoff retries for
   transient failures.
 * Redacted logs, per-deployment history and a file-level diff for each job.
+  History can be cleared on demand without deleting backups or deployed files.
+* Per-deployment size, file count and backup usage on the Deployments screen.
 * Action Scheduler support when available; WP-Cron otherwise, with a recovery
   tick so missed events do not strand a job.
 * Server-rendered admin screens; no JavaScript build step.
@@ -105,6 +107,10 @@ system cron or use *Run queue now*.
 
 == Changelog ==
 
+= 0.5.0 =
+* Added a "Clear history" button on the History screen. It removes finished, failed and cancelled jobs and their logs while keeping active jobs, deployed files and backups.
+* The Deployments screen now shows each deployment's size, file count and backup disk usage.
+
 = 0.4.0 =
 * Added a "Clear old backups" option on Settings and Tools, with a confirmation dialog. It removes backups beyond the retention count while keeping the newest ones.
 * Settings and Tools now show the number of restore points and the backup disk usage.
@@ -131,6 +137,9 @@ system cron or use *Run queue now*.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.5.0 =
+Adds on-demand history clearing and per-deployment size information. No settings change needed.
 
 = 0.4.0 =
 Adds a confirmed one-click way to clear old backups. No settings change needed.

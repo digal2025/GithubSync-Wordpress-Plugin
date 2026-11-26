@@ -61,6 +61,7 @@ final class Actions {
 			'githubsync_check_update',
 			'githubsync_generate_key',
 			'githubsync_clear_logs',
+			'githubsync_clear_history',
 			'githubsync_run_queue',
 			'githubsync_prune_backups',
 			'githubsync_dismiss_checklist',
@@ -142,6 +143,9 @@ final class Actions {
 				break;
 			case 'githubsync_clear_logs':
 				self::clear_logs();
+				break;
+			case 'githubsync_clear_history':
+				self::clear_history();
 				break;
 			case 'githubsync_run_queue':
 				self::run_queue();
@@ -838,6 +842,21 @@ final class Actions {
 		( new LogRepository() )->clear_all();
 
 		self::back( 'githubsync-tools', 'logs_cleared' );
+	}
+
+	/**
+	 * Delete recorded deployment history.
+	 *
+	 * @return void
+	 */
+	private static function clear_history() {
+		self::verify( 'githubsync_clear_history' );
+
+		$id = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		( new JobRepository() )->clear_history( $id );
+
+		self::back( 'githubsync-history', 'history_cleared' );
 	}
 
 	/**

@@ -108,6 +108,7 @@ final class AdminMenu {
 			'settings_saved'       => __( 'Settings saved.', 'githubsync' ),
 			'key_created'          => __( 'Encryption key file created outside the web root.', 'githubsync' ),
 			'logs_cleared'         => __( 'Deployment logs cleared.', 'githubsync' ),
+			'history_cleared'      => __( 'Deployment history cleared. Active jobs, deployed files and backups were kept.', 'githubsync' ),
 			'queue_ran'            => __( 'Queue processed.', 'githubsync' ),
 			'backups_pruned'       => __( 'Old backups cleared.', 'githubsync' ),
 			'checklist_closed'     => __( 'Setup checklist closed. You can show it again at any time from the dashboard.', 'githubsync' ),

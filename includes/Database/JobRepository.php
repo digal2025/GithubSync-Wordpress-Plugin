@@ -215,6 +215,54 @@ final class JobRepository {
 	}
 
 	/**
+	 * Total number of recorded jobs.
+	 *
+	 * @return int
+	 */
+	public function count() {
+		global $wpdb;
+		$table = $this->table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+	}
+
+	/**
+	 * Delete finished jobs and their logs, keeping active jobs intact.
+	 *
+	 * Backups and deployed files are not touched: a cleared job record only
+	 * removes the history entry from wp-admin.
+	 *
+	 * @param int $deployment_id Deployment ID, or 0 for every deployment.
+	 * @return int Number of jobs removed.
+	 */
+	public function clear_history( $deployment_id = 0 ) {
+		global $wpdb;
+
+		$jobs = $this->table();
+		$logs = Schema::logs();
+
+		$where  = "status IN ('succeeded','failed','cancelled')";
+		$params = array();
+
+		if ( (int) $deployment_id > 0 ) {
+			$where   .= ' AND deployment_id = %d';
+			$params[] = (int) $deployment_id;
+		}
+
+		$log_sql  = "DELETE FROM {$logs} WHERE job_id IN (SELECT id FROM {$jobs} WHERE {$where})";
+		$job_sql  = "DELETE FROM {$jobs} WHERE {$where}";
+		$log_sql  = $params ? $wpdb->prepare( $log_sql, $params ) : $log_sql; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$job_sql  = $params ? $wpdb->prepare( $job_sql, $params ) : $job_sql; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( $log_sql );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->query( $job_sql );
+	}
+
+	/**
 	 * Successful jobs that produced a backup (rollback candidates).
 	 *
 	 * @param int $deployment_id Deployment ID.

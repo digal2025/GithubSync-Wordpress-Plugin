@@ -33,6 +33,26 @@ foreach ( $gs_jobs as $gs_job_row ) {
 	);
 	?>
 
+	<?php if ( ! empty( $data['history_count'] ) ) : ?>
+		<div class="gs-card">
+			<div class="gs-actionbar">
+				<form
+					method="post"
+					action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+					class="gs-inline"
+					data-gs-confirm="<?php esc_attr_e( 'Clear deployment history?', 'githubsync' ); ?>"
+					data-gs-confirm-text="<?php esc_attr_e( 'All finished, failed and cancelled jobs will be removed from this site, along with their log entries. Active jobs, deployed files and backups are kept.', 'githubsync' ); ?>"
+					data-gs-confirm-ok="<?php esc_attr_e( 'Clear history', 'githubsync' ); ?>"
+					data-gs-confirm-danger="1"
+				>
+					<?php wp_nonce_field( 'githubsync_clear_history' ); ?>
+					<input type="hidden" name="action" value="githubsync_clear_history">
+					<button type="submit" class="button gs-danger"><?php \GitHubSync\Admin\AdminMenu::icon( 'history' ); ?> <?php esc_html_e( 'Clear history', 'githubsync' ); ?></button>
+				</form>
+			</div>
+		</div>
+	<?php endif; ?>
+
 	<?php if ( empty( $gs_jobs ) ) : ?>
 		<?php
 		\GitHubSync\Admin\AdminMenu::empty_state(

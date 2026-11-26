@@ -36,8 +36,9 @@ final class HistoryPage {
 		}
 
 		$data = array(
-			'jobs'  => $jobs->recent( 0, 200 ),
-			'names' => $names,
+			'jobs'          => $jobs->recent( 0, 200 ),
+			'names'         => $names,
+			'history_count' => $jobs->count(),
 		);
 
 		include GITHUBSYNC_DIR . 'templates/history.php';

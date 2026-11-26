@@ -42,6 +42,7 @@ defined( 'ABSPATH' ) || exit;
 						<th><?php esc_html_e( 'Name', 'githubsync' ); ?></th>
 						<th><?php esc_html_e( 'Repository / branch', 'githubsync' ); ?></th>
 						<th><?php esc_html_e( 'Destination', 'githubsync' ); ?></th>
+						<th><?php esc_html_e( 'Size', 'githubsync' ); ?></th>
 						<th><?php esc_html_e( 'Last deployment', 'githubsync' ); ?></th>
 						<th class="gs-actions"><?php esc_html_e( 'Actions', 'githubsync' ); ?></th>
 					</tr>
@@ -64,6 +65,33 @@ defined( 'ABSPATH' ) || exit;
 							<td data-gs-label="<?php esc_attr_e( 'Destination', 'githubsync' ); ?>">
 								<code class="gs-path-soft"><?php echo esc_html( \GitHubSync\Support\Helpers::relative_path( $gs_row['destination_path'] ) ); ?></code>
 								<div class="gs-muted"><?php echo esc_html( isset( $data['types'][ $gs_row['deployment_type'] ] ) ? $data['types'][ $gs_row['deployment_type'] ] : $gs_row['deployment_type'] ); ?></div>
+							</td>
+							<td data-gs-label="<?php esc_attr_e( 'Size', 'githubsync' ); ?>">
+								<?php if ( ! empty( $gs_row['has_files'] ) ) : ?>
+									<strong><?php echo esc_html( \GitHubSync\Support\Helpers::human_bytes( (int) $gs_row['size'] ) ); ?></strong>
+									<div class="gs-muted">
+										<?php
+										printf(
+											/* translators: %s: number of files. */
+											esc_html( _n( '%s file', '%s files', (int) $gs_row['file_count'], 'githubsync' ) ),
+											esc_html( (string) (int) $gs_row['file_count'] )
+										);
+										?>
+									</div>
+								<?php else : ?>
+									<span class="gs-muted"><?php esc_html_e( 'Not deployed yet', 'githubsync' ); ?></span>
+								<?php endif; ?>
+								<?php if ( (int) $gs_row['backup_bytes'] > 0 ) : ?>
+									<div class="gs-muted">
+										<?php
+										printf(
+											/* translators: %s: backup disk usage. */
+											esc_html__( 'Backups: %s', 'githubsync' ),
+											esc_html( \GitHubSync\Support\Helpers::human_bytes( (int) $gs_row['backup_bytes'] ) )
+										);
+										?>
+									</div>
+								<?php endif; ?>
 							</td>
 							<td data-gs-label="<?php esc_attr_e( 'Last deployment', 'githubsync' ); ?>">
 								<?php if ( $gs_last ) : ?>
