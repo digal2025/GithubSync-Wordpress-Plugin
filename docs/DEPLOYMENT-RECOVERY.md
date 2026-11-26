@@ -84,9 +84,11 @@ The deployment detail page offers two paths back, both one click:
 
 Requirements for a backup restore: the target job must be `succeeded`, and its
 backup directory must still exist with its manifest. Backups are pruned to
-`backup_retention` (default 3, clamped 1–20) after each successful deployment,
-and on demand from **Tools → Cleanup**. When a backup has been pruned, use the
-GitHub history path instead.
+`backup_retention` (default 3, clamped 1–20) after each successful deployment.
+Use **Clear old backups** on **GitHubSync → Settings → Backups** or
+**GitHubSync → Tools → Maintenance** to remove older backups on demand; the
+newest `backup_retention` backups stay in place. When a backup has been cleared,
+use the GitHub history path instead.
 
 ## Backups on disk
 

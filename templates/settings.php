@@ -136,6 +136,34 @@ $gs_settings = $data['settings'];
 	</div>
 
 	<div class="gs-card">
+		<h2><?php \GitHubSync\Admin\AdminMenu::icon( 'database' ); ?> <?php esc_html_e( 'Backups', 'githubsync' ); ?></h2>
+		<p class="gs-muted">
+			<?php
+			printf(
+				/* translators: 1: number of backups, 2: disk usage, 3: retention count. */
+				esc_html__( 'There are %1$s verified restore points using %2$s on this site. Clearing removes older backups for every deployment and keeps the newest %3$s.', 'githubsync' ),
+				esc_html( (string) $data['backup_count'] ),
+				esc_html( $data['backup_usage'] ),
+				esc_html( (string) $gs_settings['backup_retention'] )
+			);
+			?>
+		</p>
+		<form
+			method="post"
+			action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+			class="gs-form gs-inline"
+			data-gs-confirm="<?php esc_attr_e( 'Clear old backups?', 'githubsync' ); ?>"
+			data-gs-confirm-text="<?php esc_attr_e( 'Backups beyond the retention limit will be deleted from this site. Deployed files and the newest backups stay in place.', 'githubsync' ); ?>"
+			data-gs-confirm-ok="<?php esc_attr_e( 'Clear old backups', 'githubsync' ); ?>"
+			data-gs-confirm-danger="1"
+		>
+			<?php wp_nonce_field( 'githubsync_prune_backups' ); ?>
+			<input type="hidden" name="action" value="githubsync_prune_backups">
+			<button type="submit" class="button"><?php \GitHubSync\Admin\AdminMenu::icon( 'database' ); ?> <?php esc_html_e( 'Clear old backups', 'githubsync' ); ?></button>
+		</form>
+	</div>
+
+	<div class="gs-card">
 		<h2><?php \GitHubSync\Admin\AdminMenu::icon( 'refresh' ); ?> <?php esc_html_e( 'Plugin updates', 'githubsync' ); ?></h2>
 		<p class="gs-muted"><?php echo esc_html( $data['update_status'] ); ?></p>
 		<p class="gs-muted"><?php esc_html_e( 'New versions appear on Plugins and Dashboard → Updates, with release notes and a one-click update link. Every package is verified against a SHA-256 digest before installation.', 'githubsync' ); ?></p>

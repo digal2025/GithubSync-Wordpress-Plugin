@@ -81,8 +81,11 @@ CaseRunner::case( 'prune keeps the newest N backups' );
 foreach ( array( 11, 12, 13, 14 ) as $job ) {
 	$backups->create( $parent . '/live', $dep_prune, $job, str_repeat( 'd', 40 ) );
 }
+$count_before = $backups->count();
+Assert::true( $count_before >= 5, 'count sees the verified restore points' );
 $deleted = $backups->prune( $dep_prune, 2 );
 Assert::same( 2, $deleted, 'prune removed all but the two newest' );
+Assert::same( $count_before - 2, $backups->count(), 'count reflects cleared backups' );
 
 Assert::rmtree( $root );
 

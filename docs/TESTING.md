@@ -59,7 +59,7 @@ GitHubSync reconstructed test suite
 PHP 8.4.8 | WordPress 7.1.5
 
 --------------------------------------------
-Assertions: 577  Passed: 577  Failed: 0  Skipped: 0
+Assertions: 579  Passed: 579  Failed: 0  Skipped: 0
 
 RESULT: PASS
 ```

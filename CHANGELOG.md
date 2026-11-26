@@ -6,11 +6,20 @@ All notable changes to GitHubSync are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
+### Added
+
+- A **Clear old backups** option on **GitHubSync → Settings** and **Tools**,
+  with a confirmation dialog. It deletes backups beyond the configured
+  retention count for every deployment and keeps the newest ones. The screens
+  now show how many verified restore points exist and how much space they use.
+
 ## [0.3.0] - 2026-11-26
 
 ### Added
 
-- **Automatic plugin updates.** GitHubSync now checks a signed update manifest
+- **Automatic plugin updates.** GitHubSync now checks a public update manifest
   twice a day and shows new versions on **Plugins** and **Dashboard → Updates**,
   just like a WordPress.org plugin. Admins can see release notes and update with
   one click. Downloads are checked against the SHA-256 digest in the manifest

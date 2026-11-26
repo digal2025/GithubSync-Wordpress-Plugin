@@ -207,6 +207,46 @@ final class BackupManager {
 	}
 
 	/**
+	 * Number of verified backups across all deployments.
+	 *
+	 * @return int
+	 */
+	public function count() {
+		$deployments = @scandir( $this->root() ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+		if ( ! is_array( $deployments ) ) {
+			return 0;
+		}
+
+		$total = 0;
+
+		foreach ( $deployments as $deployment ) {
+			if ( ! ctype_digit( $deployment ) ) {
+				continue;
+			}
+
+			$dir   = $this->root() . '/' . $deployment;
+			$items = @scandir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+			if ( ! is_array( $items ) ) {
+				continue;
+			}
+
+			foreach ( $items as $item ) {
+				if ( ! preg_match( '/^\d+-[a-zA-Z0-9]{8}$/', $item ) ) {
+					continue;
+				}
+
+				if ( file_exists( $dir . '/' . $item . '/.githubsync-backup.json' ) ) {
+					$total++;
+				}
+			}
+		}
+
+		return $total;
+	}
+
+	/**
 	 * Total bytes used by all backups.
 	 *
 	 * @return int

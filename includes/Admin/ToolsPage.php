@@ -102,6 +102,7 @@ final class ToolsPage {
 		$data = array(
 			'checks'       => $checks,
 			'backup_usage' => Helpers::human_bytes( $backups->usage() ),
+			'backup_count' => $backups->count(),
 			'log_count'    => ( new LogRepository() )->count(),
 			'work_dir'     => $work,
 		);

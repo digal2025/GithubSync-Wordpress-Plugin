@@ -66,7 +66,7 @@ $gs_attention = count( $gs_checks ) - $gs_ok;
 		<div class="gs-card gs-card--side">
 			<h2><?php \GitHubSync\Admin\AdminMenu::icon( 'database' ); ?> <?php esc_html_e( 'Storage', 'githubsync' ); ?></h2>
 			<ul class="gs-facts">
-				<li><span><?php esc_html_e( 'Backups', 'githubsync' ); ?></span> <strong><?php echo esc_html( $data['backup_usage'] ); ?></strong></li>
+				<li><span><?php esc_html_e( 'Backups', 'githubsync' ); ?></span> <strong><?php echo esc_html( (string) $data['backup_count'] ); ?> · <?php echo esc_html( $data['backup_usage'] ); ?></strong></li>
 				<li><span><?php esc_html_e( 'Log entries', 'githubsync' ); ?></span> <strong><?php echo esc_html( (string) $data['log_count'] ); ?></strong></li>
 			</ul>
 			<p class="gs-muted gs-break"><?php echo esc_html( $data['work_dir'] ); ?></p>
@@ -82,10 +82,18 @@ $gs_attention = count( $gs_checks ) - $gs_ok;
 					<button type="submit" class="button"><?php esc_html_e( 'Run queue now', 'githubsync' ); ?></button>
 				</form>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gs-inline">
+				<form
+					method="post"
+					action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+					class="gs-inline"
+					data-gs-confirm="<?php esc_attr_e( 'Clear old backups?', 'githubsync' ); ?>"
+					data-gs-confirm-text="<?php esc_attr_e( 'Backups beyond the retention limit will be deleted from this site. Deployed files and the newest backups stay in place.', 'githubsync' ); ?>"
+					data-gs-confirm-ok="<?php esc_attr_e( 'Clear old backups', 'githubsync' ); ?>"
+					data-gs-confirm-danger="1"
+				>
 					<?php wp_nonce_field( 'githubsync_prune_backups' ); ?>
 					<input type="hidden" name="action" value="githubsync_prune_backups">
-					<button type="submit" class="button"><?php esc_html_e( 'Prune old backups', 'githubsync' ); ?></button>
+					<button type="submit" class="button"><?php \GitHubSync\Admin\AdminMenu::icon( 'database' ); ?> <?php esc_html_e( 'Clear old backups', 'githubsync' ); ?></button>
 				</form>
 
 				<form

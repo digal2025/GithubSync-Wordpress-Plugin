@@ -7,8 +7,11 @@
 
 namespace GitHubSync\Admin;
 
+use GitHubSync\Deployment\BackupManager;
+use GitHubSync\Filesystem\FilesystemAdapter;
 use GitHubSync\Security\Capability;
 use GitHubSync\Security\CredentialVault;
+use GitHubSync\Support\Helpers;
 use GitHubSync\Support\Settings;
 use GitHubSync\Update\Updater;
 
@@ -27,11 +30,15 @@ final class SettingsPage {
 	public static function render() {
 		Capability::assert();
 
+		$backups = new BackupManager( new FilesystemAdapter() );
+
 		$data = array(
 			'settings'      => Settings::all(),
 			'encryption_ok' => CredentialVault::is_configured(),
 			'key_file'      => CredentialVault::default_key_file(),
 			'has_constant'  => defined( 'GITHUBSYNC_ENCRYPTION_KEY' ),
+			'backup_usage'  => Helpers::human_bytes( $backups->usage() ),
+			'backup_count'  => $backups->count(),
 			'update_on'     => Updater::has_pending_update(),
 			'update_locked' => defined( 'GITHUBSYNC_DISABLE_SELF_UPDATE' ) && GITHUBSYNC_DISABLE_SELF_UPDATE,
 			'update_status' => Updater::describe_status(),

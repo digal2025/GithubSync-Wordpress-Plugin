@@ -4,7 +4,7 @@ Tags: github, deploy, deployment, git, webhook
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,7 +76,8 @@ destination is considered owned by the repository.
 
 Yes. Each successful deployment keeps a verified backup (three per deployment by
 default). Any retained backup can be promoted again from the deployment detail
-screen.
+screen. Use *GitHubSync → Settings → Backups* or *Tools → Clear old backups* to
+remove backups beyond the retention count; the newest backups stay in place.
 
 = How do I update GitHubSync? =
 
@@ -104,6 +105,10 @@ system cron or use *Run queue now*.
 
 == Changelog ==
 
+= 0.4.0 =
+* Added a "Clear old backups" option on Settings and Tools, with a confirmation dialog. It removes backups beyond the retention count while keeping the newest ones.
+* Settings and Tools now show the number of restore points and the backup disk usage.
+
 = 0.3.0 =
 * Automatic plugin updates: new versions appear on the Plugins screen and Dashboard, with release notes and one-click updates.
 * Every update package is verified against a SHA-256 digest from the release manifest.
@@ -126,6 +131,9 @@ system cron or use *Run queue now*.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.4.0 =
+Adds a confirmed one-click way to clear old backups. No settings change needed.
 
 = 0.3.0 =
 Adds automatic update notices and one-click plugin updates. Self-updates are enabled by default and can be turned off in Settings.
