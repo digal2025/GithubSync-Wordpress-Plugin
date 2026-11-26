@@ -173,7 +173,9 @@ jobs:
       - name: Verify the manifest is publicly readable
         run: |
           MANIFEST="https://github.com/${RELEASES_REPO}/releases/latest/download/update.json"
-          ZIP="https://github.com/${RELEASES_REPO}/releases/latest/download/githubsync.zip"
+          LATEST_ZIP="https://github.com/${RELEASES_REPO}/releases/latest/download/githubsync.zip"
+          VERSIONED_ZIP="https://github.com/${RELEASES_REPO}/releases/download/${GITHUB_REF_NAME}/githubsync.zip"
+          VERSION="${GITHUB_REF_NAME#v}"
 
           for attempt in 1 2 3 4 5; do
             STATUS="$(curl -sS -o /tmp/update.json -w '%{http_code}' -L "$MANIFEST" || true)"
@@ -186,15 +188,23 @@ jobs:
             exit 1
           fi
 
-          ZIP_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "$ZIP")"
-          if [ "$ZIP_STATUS" != "200" ] && [ "$ZIP_STATUS" != "206" ]; then
-            echo "The release zip is not reachable anonymously (HTTP ${ZIP_STATUS})." >&2
+          LATEST_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "$LATEST_ZIP")"
+          if [ "$LATEST_STATUS" != "200" ] && [ "$LATEST_STATUS" != "206" ]; then
+            echo "The latest release zip is not reachable anonymously (HTTP ${LATEST_STATUS})." >&2
+            exit 1
+          fi
+
+          VERSIONED_STATUS="$(curl -sS -o /dev/null -r 0-0 -w '%{http_code}' -L "$VERSIONED_ZIP")"
+          if [ "$VERSIONED_STATUS" != "200" ] && [ "$VERSIONED_STATUS" != "206" ]; then
+            echo "The versioned release zip is not reachable anonymously (HTTP ${VERSIONED_STATUS})." >&2
             exit 1
           fi
 
           php -r '
             $m = json_decode(file_get_contents("/tmp/update.json"), true);
-            $ok = is_array($m) && ($m["download_url"] ?? "") === $argv[1];
-            if (!$ok) { fwrite(STDERR, "Manifest download_url does not match the verified zip.\n"); exit(1); }
-            echo "Manifest points at the verified zip.\n";
-          ' "$ZIP"
+            $ok = is_array($m)
+              && ($m["version"] ?? "") === $argv[2]
+              && ($m["download_url"] ?? "") === $argv[1];
+            if (!$ok) { fwrite(STDERR, "Manifest does not match this release.\n"); exit(1); }
+            echo "Manifest points at the verified versioned zip.\n";
+          ' "$VERSIONED_ZIP" "$VERSION"
